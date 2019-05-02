@@ -29,6 +29,7 @@
 
 # Android related
 **/android/**/gradle-wrapper.jar
+**/android/**google-services.json
 **/android/.gradle
 **/android/captures/
 **/android/gradlew

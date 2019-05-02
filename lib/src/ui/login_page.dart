@@ -1,4 +1,4 @@
-import 'package:flt_login/src/ui/signup.dart';
+import 'package:flt_login/src/ui/signup_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../common/common.dart';

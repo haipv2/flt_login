@@ -1,0 +1,339 @@
+import 'package:flt_login/src/blocs/signup_bloc.dart';
+import 'package:flt_login/src/common/common.dart';
+import 'package:flt_login/src/ui/widgets/custom_flat_button.dart';
+import 'package:flutter/material.dart';
+
+class SignUp extends StatefulWidget {
+  @override
+  _SignUpState createState() => _SignUpState();
+}
+
+class _SignUpState extends State<SignUp> {
+  TextEditingController firstNameController = new TextEditingController();
+  TextEditingController lastNameController = new TextEditingController();
+  TextEditingController passwordController = new TextEditingController();
+  TextEditingController passwordConfirmController = new TextEditingController();
+  TextEditingController emailController = new TextEditingController();
+  SignupBloc _signUpBloc;
+  bool _confirmPassValid = false;
+
+  @override
+  void initState() {
+    _signUpBloc = SignupBloc();
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    _signUpBloc.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fistName = StreamBuilder(
+        stream: _signUpBloc.firstNameStream,
+        builder: (context, snapshot) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+            child: TextField(
+              autofocus: false,
+              controller: firstNameController,
+              onChanged: _signUpBloc.changeFirstName,
+              decoration: InputDecoration(
+                labelText: 'First Name',
+                hintText: 'Enter first name',
+                errorText: snapshot.error,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 1,
+                    )),
+              ),
+            ),
+          );
+        });
+    Widget lastName = StreamBuilder(
+        stream: _signUpBloc.lastNameStream,
+        builder: (context, snapshot) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+            child: TextField(
+              onChanged: _signUpBloc.changeLastName,
+              autofocus: false,
+              controller: lastNameController,
+              decoration: InputDecoration(
+                  labelText: 'Last Name',
+                  hintText: 'Enter last name',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      borderSide: BorderSide(color: Colors.grey, width: 1))),
+            ),
+          );
+        });
+
+    Widget email = StreamBuilder(
+        stream: _signUpBloc.userEmailStream,
+        builder: (context, snapshot) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+            child: TextField(
+              onChanged: _signUpBloc.changeEmail,
+              autofocus: false,
+              controller: emailController,
+              decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'Enter a valid email',
+                  errorText: snapshot.error,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      borderSide: BorderSide(color: Colors.grey, width: 1))),
+            ),
+          );
+        });
+
+    var password = StreamBuilder(
+      stream: _signUpBloc.passwordStream,
+      builder: (context, snapshot) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child: TextField(
+            obscureText: true,
+            autofocus: false,
+            controller: passwordController,
+            onChanged: _signUpBloc.changePass,
+            decoration: InputDecoration(
+                labelText: 'Password',
+                hintText: 'Enter your password.',
+                errorText: snapshot.error,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.grey, width: 1))),
+          ),
+        );
+      },
+    );
+
+    var passwordConfirm = StreamBuilder(
+      stream: _signUpBloc.passwordConfirmStream,
+      builder: (context, snapshot) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child: TextField(
+            onChanged: _signUpBloc.changePassConfirm,
+            autofocus: false,
+            obscureText: true,
+            controller: passwordConfirmController,
+            decoration: InputDecoration(
+                labelText: 'Confirm password',
+                errorText: snapshot.error,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.grey, width: 1))),
+          ),
+        );
+      },
+    );
+    bool defaultGender = true;
+    var gender = StreamBuilder(
+      stream: _signUpBloc.genderStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data != null)
+          defaultGender=snapshot.data;
+        print(defaultGender);
+
+        return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text('Gender:', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold), ),
+                Text('Male', style: TextStyle(fontStyle: FontStyle.italic),),
+                Checkbox(
+                  value:defaultGender,
+                  onChanged: _signUpBloc.changeGenderStream,
+                ),
+                Text('Female', style: TextStyle(fontStyle: FontStyle.italic),),
+                Checkbox(
+                  value: !defaultGender,
+                  onChanged: _signUpBloc.changeGenderStream,
+                ),
+              ],
+            ));
+      },
+    );
+
+    Widget registerButton() => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            StreamBuilder(
+              stream: _signUpBloc.registerStream,
+              builder: (BuildContext context, AsyncSnapshot<bool> snapshot) =>
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: CustomFlatButton(
+                      title: "Register",
+                      fontSize: 15,
+                      onPressed: (snapshot.hasData && snapshot.data == true)
+                          ? () {
+                              print('all input values is valid');
+                            }
+                          : null,
+                      fontWeight: FontWeight.w400,
+                      textColor: (snapshot.hasData && snapshot.data == true)
+                          ? Colors.black
+                          : Colors.grey,
+                      splashColor: Colors.black12,
+                      borderColor: Colors.white,
+                      borderWidth: 0,
+                      color: (snapshot.hasData && snapshot.data == true)
+                          ? Colors.orange
+                          : Colors.grey,
+                    ),
+                  ),
+            ),
+            CustomFlatButton(
+              title: "Reset",
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              textColor: Colors.black,
+              onPressed: () {
+                resetSignupForm();
+              },
+              splashColor: Colors.black12,
+              borderColor: Colors.black,
+              borderWidth: 0,
+//              color: Colors.grey,
+            ),
+          ],
+        );
+
+    var registerByOtherWay = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+          child: CustomFlatButton(
+            title: "Facebook Login",
+            fontSize: 12,
+            fontWeight: FontWeight.w300,
+            textColor: Colors.white,
+            onPressed: () {
+              _facebookLogin(context: context);
+            },
+            splashColor: Colors.black12,
+            borderColor: Color.fromRGBO(59, 89, 152, 1.0),
+            borderWidth: 0,
+            color: Color.fromRGBO(59, 89, 152, 1.0),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1.0),
+          child: Text('OR',
+              style: TextStyle(
+                color: Colors.grey,
+              )),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+          child: CustomFlatButton(
+            title: "Google login",
+            fontSize: 12,
+            fontWeight: FontWeight.w300,
+            textColor: Colors.red,
+            onPressed: () {
+              _gooogleLogin(context: context);
+            },
+            splashColor: Colors.black12,
+            borderColor: Color.fromRGBO(59, 89, 152, 1.0),
+            borderWidth: 0,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            SizedBox(
+              height: 50,
+            ),
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            fistName,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            lastName,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            email,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            password,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            passwordConfirm,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            gender,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            registerButton(),
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            registerByOtherWay,
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _validateSignupData() {
+    print('do register');
+    if (_signUpBloc.validateFields()) {
+      _doRegister();
+    } else {
+      showErrorMsg();
+    }
+  }
+
+  void _facebookLogin({BuildContext context}) {
+    print('facebook login');
+  }
+
+  void _gooogleLogin({BuildContext context}) {
+    print('BEGIN: google login');
+  }
+
+  void _doRegister() {}
+
+  void showErrorMsg() {
+    final snackbar =
+        SnackBar(content: Text(ERR_MSG), duration: Duration(seconds: 3));
+    Scaffold.of(context).showSnackBar(snackbar);
+  }
+
+  void resetSignupForm() {
+    firstNameController.clear();
+    lastNameController.clear();
+    emailController.clear();
+    passwordConfirmController.clear();
+    passwordController.clear();
+  }
+}

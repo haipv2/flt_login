@@ -1,5 +1,5 @@
 import 'package:flt_login/src/ui/login_page.dart';
-import 'package:flt_login/src/ui/signup.dart';
+import 'package:flt_login/src/ui/signup_page.dart';
 import 'package:flt_login/src/ui/splash/splash_page.dart';
 import 'package:flutter/material.dart';
 import './src/common/common.dart';
