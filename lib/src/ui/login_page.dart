@@ -1,7 +1,10 @@
+import 'package:flt_login/src/blocs/login_bloc.dart';
+import 'package:flt_login/src/blocs/login_bloc_provider.dart';
 import 'package:flt_login/src/ui/signup_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../common/common.dart';
+import 'my_page.dart';
 
 class Loginpage extends StatefulWidget {
   @override
@@ -12,11 +15,23 @@ class _LoginpageState extends State<Loginpage> {
   TextEditingController emailController = new TextEditingController();
   TextEditingController passController = new TextEditingController();
 
-//  LogicBloc _bloc;
+  LoginBloc _bloc;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bloc = LoginBlocProvider.of(context);
+  }
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _bloc.dispose();
+    super.dispose();
   }
 
   @override
@@ -28,40 +43,67 @@ class _LoginpageState extends State<Loginpage> {
       decoration: BoxDecoration(shape: BoxShape.circle),
     );
     var textLogin = Text('Login Page');
-    var emailTextField = Padding(
-      padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
-      child: TextField(
-        autofocus: false,
-        controller: emailController,
-        decoration: InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.email),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(5)),
-                borderSide: BorderSide(color: Colors.grey, width: 1))),
-      ),
+    var emailTextField = StreamBuilder(
+      stream: _bloc.emailStream,
+      builder: (context, snapshot) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
+          child: TextField(
+            autofocus: false,
+            controller: emailController,
+            onChanged: _bloc.emailStreamChange,
+            decoration: InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.grey, width: 1))),
+          ),
+        );
+      },
     );
-    var passwordField = Padding(
-      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-      child: TextField(
-        autofocus: false,
-        controller: passController,
-        obscureText: true,
-        decoration: InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(5)),
-                borderSide: BorderSide(color: Colors.grey, width: 1))),
-      ),
+
+    var passwordField = StreamBuilder(
+      stream: _bloc.passwordStream,
+      builder: (context, snapshot) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child: TextField(
+            autofocus: false,
+            controller: passController,
+            obscureText: true,
+            onChanged: _bloc.passwordStreamChange,
+            decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: Icon(Icons.lock),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.grey, width: 1))),
+          ),
+        );
+      },
     );
-    var loginButton = RaisedButton(
-      child: Text('Login'),
-      textColor: Colors.white,
-      color: Colors.blue,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      onPressed: null,
-    );
+
+    Widget loginButton() => StreamBuilder(
+          stream: _bloc.loginStream,
+          builder: (context, snapshot) {
+            return RaisedButton(
+              child: Text('Login'),
+              textColor: Colors.white,
+              color: Colors.blue,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              onPressed: () {
+                if (!snapshot.hasData || snapshot.hasError) {
+                  _authenticate();
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
+            );
+          },
+        );
+
     var registerUser = Container(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -73,8 +115,7 @@ class _LoginpageState extends State<Loginpage> {
                 recognizer: TapGestureRecognizer()..onTap = () {},
                 children: [
                   TextSpan(
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = signUpUser,
+                    recognizer: TapGestureRecognizer()..onTap = signUpUser,
                     text: 'Sign up',
                     style: TextStyle(
                         color: Colors.blue, fontWeight: FontWeight.bold),
@@ -116,7 +157,7 @@ class _LoginpageState extends State<Loginpage> {
             Container(
               margin: EdgeInsets.only(top: 10.0, bottom: 10.0),
             ),
-            loginButton,
+            loginButton(),
             Container(margin: EdgeInsets.fromLTRB(10, 20, 10, 0)),
             registerUser,
           ],
@@ -127,12 +168,26 @@ class _LoginpageState extends State<Loginpage> {
 
   void _forgotPassword() {
     print('press forget password');
-
   }
 
-  void signUpUser() async{
+  void signUpUser() async {
     print('signup user');
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUp()));
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => SignUp()));
+  }
 
+  void _authenticate() {
+    _bloc.authenticateUser().then((value) {
+      if (value == null) {
+        SnackBar snackbar = SnackBar(
+          content: Text('Email or password is not corrected'),
+          duration: Duration(seconds: 3),
+        );
+        Scaffold.of(context).showSnackBar(snackbar);
+      } else {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => MyPage(value)));
+      }
+    });
   }
 }

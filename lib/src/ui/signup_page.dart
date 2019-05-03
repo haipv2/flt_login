@@ -3,6 +3,8 @@ import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/ui/widgets/custom_flat_button.dart';
 import 'package:flutter/material.dart';
 
+import 'my_page.dart';
+
 class SignUp extends StatefulWidget {
   @override
   _SignUpState createState() => _SignUpState();
@@ -15,7 +17,6 @@ class _SignUpState extends State<SignUp> {
   TextEditingController passwordConfirmController = new TextEditingController();
   TextEditingController emailController = new TextEditingController();
   SignupBloc _signUpBloc;
-  bool _confirmPassValid = false;
 
   @override
   void initState() {
@@ -140,29 +141,57 @@ class _SignUpState extends State<SignUp> {
         );
       },
     );
-    bool defaultGender = true;
+    int _defaultGender = 1;
     var gender = StreamBuilder(
       stream: _signUpBloc.genderStream,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data != null)
-          defaultGender=snapshot.data;
-        print(defaultGender);
+          _defaultGender = snapshot.data;
+        print(_defaultGender);
 
         return Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Gender:', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold), ),
-                Text('Male', style: TextStyle(fontStyle: FontStyle.italic),),
-                Checkbox(
-                  value:defaultGender,
-                  onChanged: _signUpBloc.changeGenderStream,
+                Text(
+                  'Gender:',
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold),
                 ),
-                Text('Female', style: TextStyle(fontStyle: FontStyle.italic),),
-                Checkbox(
-                  value: !defaultGender,
-                  onChanged: _signUpBloc.changeGenderStream,
+                Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          'Male',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                        Radio(
+                          value: 1,
+                          groupValue: _defaultGender,
+                          onChanged: _signUpBloc.changeGenderStream,
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+                Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          'Female',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                        Radio(
+                          value: 0,
+                          groupValue: _defaultGender,
+                          onChanged: _signUpBloc.changeGenderStream,
+                        ),
+                      ],
+                    )
+                  ],
                 ),
               ],
             ));
@@ -183,6 +212,7 @@ class _SignUpState extends State<SignUp> {
                       onPressed: (snapshot.hasData && snapshot.data == true)
                           ? () {
                               print('all input values is valid');
+                              _doRegister();
                             }
                           : null,
                       fontWeight: FontWeight.w400,
@@ -190,7 +220,7 @@ class _SignUpState extends State<SignUp> {
                           ? Colors.black
                           : Colors.grey,
                       splashColor: Colors.black12,
-                      borderColor: Colors.white,
+                      borderColor: Colors.grey,
                       borderWidth: 0,
                       color: (snapshot.hasData && snapshot.data == true)
                           ? Colors.orange
@@ -198,19 +228,24 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
             ),
-            CustomFlatButton(
-              title: "Reset",
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              textColor: Colors.black,
-              onPressed: () {
-                resetSignupForm();
-              },
-              splashColor: Colors.black12,
-              borderColor: Colors.black,
-              borderWidth: 0,
-//              color: Colors.grey,
-            ),
+            StreamBuilder(
+                stream: _signUpBloc.resetFormStream,
+                builder: (context, snapshot) {
+                  return CustomFlatButton(
+                    title: "Reset",
+                    fontSize: 15,
+                    fontWeight: FontWeight.w100,
+                    textColor: Colors.white,
+                    onPressed: () {
+                      resetSignupForm();
+                      _signUpBloc.registerStream;
+                    },
+                    splashColor: Colors.black12,
+                    borderColor: Colors.grey,
+                    borderWidth: 0,
+                    color: Colors.grey,
+                  );
+                }),
           ],
         );
 
@@ -219,18 +254,16 @@ class _SignUpState extends State<SignUp> {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-          child: CustomFlatButton(
-            title: "Facebook Login",
-            fontSize: 12,
-            fontWeight: FontWeight.w300,
-            textColor: Colors.white,
-            onPressed: () {
-              _facebookLogin(context: context);
-            },
-            splashColor: Colors.black12,
-            borderColor: Color.fromRGBO(59, 89, 152, 1.0),
-            borderWidth: 0,
-            color: Color.fromRGBO(59, 89, 152, 1.0),
+          child: InkWell(
+            onTap: _pressFacebookSignup,
+            child: Text(
+              "Facebook Login",
+              style: TextStyle(
+                  color: Color.fromRGBO(59, 89, 152, 1.0),
+                  fontWeight: FontWeight.w300,
+                  fontSize: 15,
+                  decoration: TextDecoration.underline),
+            ),
           ),
         ),
         Padding(
@@ -242,18 +275,16 @@ class _SignUpState extends State<SignUp> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-          child: CustomFlatButton(
-            title: "Google login",
-            fontSize: 12,
-            fontWeight: FontWeight.w300,
-            textColor: Colors.red,
-            onPressed: () {
-              _gooogleLogin(context: context);
-            },
-            splashColor: Colors.black12,
-            borderColor: Color.fromRGBO(59, 89, 152, 1.0),
-            borderWidth: 0,
-            color: Colors.white,
+          child: InkWell(
+            onTap: _pressGoogleSignup,
+            child: Text(
+              "Google login",
+              style: TextStyle(
+                  color: Color.fromRGBO(59, 89, 152, 1.0),
+                  fontWeight: FontWeight.w300,
+                  fontSize: 15,
+                  decoration: TextDecoration.underline),
+            ),
           ),
         ),
       ],
@@ -304,24 +335,22 @@ class _SignUpState extends State<SignUp> {
     );
   }
 
-  void _validateSignupData() {
-    print('do register');
-    if (_signUpBloc.validateFields()) {
-      _doRegister();
-    } else {
-      showErrorMsg();
-    }
-  }
-
-  void _facebookLogin({BuildContext context}) {
+  void _pressFacebookSignup({BuildContext context}) {
     print('facebook login');
   }
 
-  void _gooogleLogin({BuildContext context}) {
+  void _pressGoogleSignup({BuildContext context}) {
     print('BEGIN: google login');
   }
 
-  void _doRegister() {}
+  void _doRegister() {
+    _signUpBloc.showProgressBar(true);
+    _signUpBloc.register().then((user) {
+      print('register sucessfully');
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => MyPage(user)));
+    });
+  }
 
   void showErrorMsg() {
     final snackbar =

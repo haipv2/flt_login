@@ -1,25 +1,36 @@
+import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/resources/repository.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LoginBloc {
-  final _repositor = Repository();
-  final _email = BehaviorSubject<String>();
-  final _username = BehaviorSubject<String>();
-  final _userphone = BehaviorSubject<String>();
-  final _userRole = BehaviorSubject<String>();
-  final _password = BehaviorSubject<String>();
-  final _isSignedIn = BehaviorSubject<bool>();
+  final _repository = Repository();
+  final _userEmailController = BehaviorSubject<String>();
+  final _userPasswordController = BehaviorSubject<String>();
+  final _loginStreamController = PublishSubject<void>();
 
-  Observable<String> get emailStream => _email.stream;
+  //Stream
+  Observable<String> get emailStream => _userEmailController.stream;
 
-  Observable<String> get passwordStream => _password.stream;
+  Observable<String> get passwordStream => _userPasswordController.stream;
 
-  Observable<bool> get signInStatus => _isSignedIn.stream;
+  Observable<void> get loginStream => _loginStreamController.stream;
 
-  Future<void> registerUser(){
-    _repositor.registerUser(_email.value, _password.value, _username.value, _userphone.value, _userRole.value);
+  Function(void) get doLoginStream => _loginStreamController.sink.add;
+
+  //add input
+  Function(String) get emailStreamChange => _userEmailController.sink.add;
+  Function(String) get passwordStreamChange => _userPasswordController.sink.add;
+
+  Future<User> authenticateUser() {
+    return _repository.authenticateUser(
+        _userEmailController.value, _userPasswordController.value);
   }
 
+  void dispose() async {
+    await _userEmailController.drain();
+    _userEmailController.close();
+    await _userPasswordController.drain();
+    _userPasswordController.close();
+  }
 }
-
