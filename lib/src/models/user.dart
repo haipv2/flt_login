@@ -1,4 +1,4 @@
-class User{
+class User {
   String _firstname;
   String _lastname;
   String _email;
@@ -7,6 +7,23 @@ class User{
   int _gender;
 
   int get gender => _gender;
+
+  User();
+
+  User.fromJson(Map<String, dynamic> json) {
+    firstname = json['first_name'];
+    email = json['email'];
+    lastname = json['last_name'];
+    gender = json['gender'];
+//    email=json['email'];
+  }
+
+  Map<String, dynamic> toJson() => {
+        'email': email,
+        'first_name': firstname,
+        'last_name': lastname,
+        'gender': gender,
+      };
 
   set gender(int value) {
     _gender = value;
@@ -41,6 +58,4 @@ class User{
   set lastname(String value) {
     _lastname = value;
   }
-
-
 }

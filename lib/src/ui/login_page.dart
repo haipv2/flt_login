@@ -1,12 +1,18 @@
+import 'dart:convert';
+
 import 'package:flt_login/src/blocs/login_bloc.dart';
 import 'package:flt_login/src/blocs/login_bloc_provider.dart';
 import 'package:flt_login/src/ui/signup_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../common/common.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'my_page.dart';
 
 class Loginpage extends StatefulWidget {
+  SharedPreferences prefs;
+  Loginpage(this.prefs);
+
   @override
   _LoginpageState createState() => _LoginpageState();
 }
@@ -55,6 +61,7 @@ class _LoginpageState extends State<Loginpage> {
             decoration: InputDecoration(
                 labelText: 'Email',
                 prefixIcon: Icon(Icons.email),
+                errorText: snapshot.error,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5)),
                     borderSide: BorderSide(color: Colors.grey, width: 1))),
@@ -76,6 +83,7 @@ class _LoginpageState extends State<Loginpage> {
             decoration: InputDecoration(
                 labelText: 'Password',
                 prefixIcon: Icon(Icons.lock),
+                errorText: snapshot.error,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5)),
                     borderSide: BorderSide(color: Colors.grey, width: 1))),
@@ -84,60 +92,53 @@ class _LoginpageState extends State<Loginpage> {
       },
     );
 
-    Widget loginButton() => StreamBuilder(
+    Widget loginButton(context) => StreamBuilder(
           stream: _bloc.loginStream,
-          builder: (context, snapshot) {
-            return RaisedButton(
-              child: Text('Login'),
-              textColor: Colors.white,
-              color: Colors.blue,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              onPressed: () {
-                if (!snapshot.hasData || snapshot.hasError) {
-                  _authenticate();
-                } else {
-                  return CircularProgressIndicator();
-                }
-              },
-            );
+          builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+            if (!snapshot.hasData || snapshot.hasError) {
+              return _processLogin(context);
+            } else if (snapshot.data) {
+              return CircularProgressIndicator();
+            }
           },
         );
-
-    var registerUser = Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          RichText(
-            text: TextSpan(
-                text: 'New user? ',
-                style: TextStyle(color: Colors.black),
-                recognizer: TapGestureRecognizer()..onTap = () {},
-                children: [
-                  TextSpan(
-                    recognizer: TapGestureRecognizer()..onTap = signUpUser,
-                    text: 'Sign up',
+    Widget registerUser(SharedPreferences prefs) => Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              RichText(
+                text: TextSpan(
+                    text: 'New user? ',
+                    style: TextStyle(color: Colors.black),
+                    recognizer: TapGestureRecognizer()..onTap = () {},
+                    children: [
+                      TextSpan(
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            signUpUser(prefs);
+                          },
+                        text: 'Sign up',
+                        style: TextStyle(
+                            color: Colors.blue, fontWeight: FontWeight.bold),
+                      ),
+                    ]),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: GestureDetector(
+                  onTap: _forgotPassword,
+                  child: Text(
+                    'Forgot password ?',
                     style: TextStyle(
                         color: Colors.blue, fontWeight: FontWeight.bold),
                   ),
-                ]),
+                ),
+              )
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: GestureDetector(
-              onTap: _forgotPassword,
-              child: Text(
-                'Forgot password ?',
-                style:
-                    TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-    return Container(
-      child: SingleChildScrollView(
+        );
+    return Scaffold(
+      body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -157,9 +158,9 @@ class _LoginpageState extends State<Loginpage> {
             Container(
               margin: EdgeInsets.only(top: 10.0, bottom: 10.0),
             ),
-            loginButton(),
+            loginButton(context),
             Container(margin: EdgeInsets.fromLTRB(10, 20, 10, 0)),
-            registerUser,
+            registerUser(widget.prefs),
           ],
         ),
       ),
@@ -170,24 +171,55 @@ class _LoginpageState extends State<Loginpage> {
     print('press forget password');
   }
 
-  void signUpUser() async {
+  void signUpUser(SharedPreferences prefs) async {
     print('signup user');
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => SignUp()));
+        context, MaterialPageRoute(builder: (context) => SignUp(prefs)));
   }
 
-  void _authenticate() {
-    _bloc.authenticateUser().then((value) {
-      if (value == null) {
+  void _authenticate(context) {
+    if(emailController.value.text.isEmpty && passController.value.text.isEmpty){
+      SnackBar snackbar = SnackBar(
+        content: Text('Enter correctly email and password'),
+        duration: Duration(seconds: 3),
+      );
+      Scaffold.of(context).showSnackBar(snackbar);
+      return;
+    }
+    _bloc.authenticateUser().then((user) {
+      if (user == null) {
         SnackBar snackbar = SnackBar(
           content: Text('Email or password is not corrected'),
           duration: Duration(seconds: 3),
         );
         Scaffold.of(context).showSnackBar(snackbar);
       } else {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => MyPage(value)));
+        _bloc.doLoginStream(true);
+        widget.prefs.setString('user', jsonEncode(user));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MyPage(user, prefs: widget.prefs,)));
       }
+    }).catchError((error){
+      SnackBar snackbar = SnackBar(
+        content: Text(error),
+        duration: Duration(seconds: 3),
+      );
+      Scaffold.of(context).showSnackBar(snackbar);
     });
+  }
+
+  ///
+  /// process login
+  ///
+  Widget _processLogin(context) {
+    return RaisedButton(
+      child: Text('Login'),
+      textColor: Colors.white,
+      color: Colors.blue,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onPressed: () {
+        _authenticate(context);
+      },
+    );
   }
 }

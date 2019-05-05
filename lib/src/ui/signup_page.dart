@@ -1,11 +1,17 @@
 import 'package:flt_login/src/blocs/signup_bloc.dart';
 import 'package:flt_login/src/common/common.dart';
+import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flt_login/src/ui/widgets/custom_flat_button.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'my_page.dart';
 
 class SignUp extends StatefulWidget {
+  SharedPreferences prefs;
+
+  SignUp(this.prefs);
+
   @override
   _SignUpState createState() => _SignUpState();
 }
@@ -238,7 +244,7 @@ class _SignUpState extends State<SignUp> {
                     textColor: Colors.white,
                     onPressed: () {
                       resetSignupForm();
-                      _signUpBloc.registerStream;
+//                      _signUpBloc.registerStream;
                     },
                     splashColor: Colors.black12,
                     borderColor: Colors.grey,
@@ -290,12 +296,23 @@ class _SignUpState extends State<SignUp> {
       ],
     );
     return Scaffold(
+      appBar: AppBar(
+          automaticallyImplyLeading: true,
+          title: Text('Register'),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => Loginpage(widget.prefs)));
+            },
+          )),
       body: SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             SizedBox(
-              height: 50,
+              height: 5,
             ),
             Container(
               margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
@@ -346,9 +363,17 @@ class _SignUpState extends State<SignUp> {
   void _doRegister() {
     _signUpBloc.showProgressBar(true);
     _signUpBloc.register().then((user) {
-      print('register sucessfully');
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => MyPage(user)));
+      if (user == null) {
+        SnackBar snackbar = SnackBar(
+          content: Text('Email is already used. Input another email.'),
+          duration: Duration(seconds: 2),
+        );
+        Scaffold.of(context).showSnackBar(snackbar);
+      } else {
+        print('register sucessfully');
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MyPage(user)));
+      }
     });
   }
 
