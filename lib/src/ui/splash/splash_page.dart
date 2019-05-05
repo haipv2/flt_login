@@ -35,7 +35,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void goToMainPage() async {
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (BuildContext context) => Loginpage()));
+//    Navigator.of(context).pushReplacement(
+//        MaterialPageRoute(builder: (BuildContext context) => Loginpage()));
   }
 }

@@ -13,11 +13,12 @@ class SignupBloc extends Object {
   final _userPasswordController = BehaviorSubject<String>();
   final _confirmPasswordController = BehaviorSubject<String>();
   final _genderStreamController = BehaviorSubject<int>();
-  final _userphone = BehaviorSubject<String>();
-  final _userRole = BehaviorSubject<String>();
-  final _isSignedIn = BehaviorSubject<bool>();
   final _progressBarController = BehaviorSubject<bool>();
   final _resetFormStreamController = PublishSubject();
+  final _backStreamController = BehaviorSubject();
+
+  Observable get backStream => _backStreamController.stream;
+  Function(void) get doBackStream => _backStreamController.sink.add;
 
   String get email => _userEmailController.value;
 
@@ -27,7 +28,7 @@ class SignupBloc extends Object {
       StreamTransformer<String, String>.fromHandlers(handleData: (name, sink) {
     if (!ValidatorUtils.validString(name) ||
         !ValidatorUtils.checkLength(name, 10, 3)) {
-      sink.addError('This is required and contain 3 characters at least.');
+      sink.addError('This is required and contain from 3-10 characters.');
     } else {
       sink.add(name);
     }
@@ -36,7 +37,7 @@ class SignupBloc extends Object {
   final _validatePass =
       StreamTransformer<String, String>.fromHandlers(handleData: (name, sink) {
     if (!ValidatorUtils.validString(name) ||
-        !ValidatorUtils.checkLength(name, 13, 7)) {
+        !ValidatorUtils.checkLength(name, 13, 6)) {
       sink.addError('This is required and contain from 6-12 characters.');
     } else {
       sink.add(name);
@@ -78,7 +79,6 @@ class SignupBloc extends Object {
           .doOnData((String s) {
         print(s);
         if (0 != _confirmPasswordController.value.compareTo(s)) {
-          _confirmPasswordController.sink.add('');
           _confirmPasswordController.sink.addError('Password does not match.');
         }
         ;
@@ -136,6 +136,7 @@ class SignupBloc extends Object {
     user.email = _userEmailController.value;
     user.password = _userPasswordController.value;
     user.gender = _genderStreamController.value == null ? 1: 0;
-    return _repository.registerUser(user);
+    var result = _repository.registerUser(user);
+    return result;
   }
 }
