@@ -26,7 +26,11 @@ class _MyPageState extends State<MyPage> {
         onPressed: () {
           print('print single mode');
           Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => GamePage(title: 'Game title',)));
+              context,
+              MaterialPageRoute(
+                  builder: (context) => GamePage(
+                        title: 'Game title',
+                      )));
         },
         padding: EdgeInsets.all(12),
         color: Colors.lightBlueAccent,
