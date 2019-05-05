@@ -1,6 +1,4 @@
 import 'package:flt_login/src/models/user.dart';
-import 'package:flt_login/src/ui/game_page.dart';
-import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
