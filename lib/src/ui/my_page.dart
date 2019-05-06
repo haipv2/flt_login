@@ -52,8 +52,8 @@ class _MyPageState extends State<MyPage> {
   }
 
   void handleMessage(Map<String, dynamic> message) async {
-    var type = getValueFromMap(message, 'type');
-    var fromId = getValueFromMap(message, 'fromId');
+    var type = getValueFromMapData(message, 'type');
+    var fromId = getValueFromMapData(message, 'fromId');
 
     print(type);
     if (type == 'invite') {
@@ -84,7 +84,7 @@ class _MyPageState extends State<MyPage> {
   }
 
   Widget buildDialog(BuildContext context, Map<String, dynamic> message) {
-    var fromName = getValueFromMap(message, 'fromName');
+    var fromName = getValueFromMapData(message, 'fromName');
 
     return AlertDialog(
       content: Text('$fromName invites you to play!'),
@@ -111,7 +111,7 @@ class _MyPageState extends State<MyPage> {
     var pushId = prefs.getString(PUSH_ID);
     var userId = prefs.getString(USER_ID);
 
-    var base = 'https://us-central1-tictactoe-64902.cloudfunctions.net';
+    var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
     String dataURL =
         '$base/sendNotification2?to=$fromPushId&fromPushId=$pushId&fromId=$userId&fromName=$username&type=accept';
     print(dataURL);
@@ -268,7 +268,7 @@ class _MyPageState extends State<MyPage> {
     await saveUserToFirebase(user);
 //    Navigator.of(context).pushNamed('userList');
     Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (context) => UserList()));
+        .pushReplacement(MaterialPageRoute(builder: (context) => UserList(title: 'Friend list',)));
   }
 
   Future<FirebaseUser> signInWithGoogle() async {
@@ -283,7 +283,6 @@ class _MyPageState extends State<MyPage> {
       }
 
       GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
       final AuthCredential credential = GoogleAuthProvider.getCredential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,

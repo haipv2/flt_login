@@ -18,7 +18,6 @@ class UserList extends StatefulWidget {
 class _UserListState extends State<UserList> {
   List<User> _users = List<User>();
 
-
   @override
   void initState() {
     super.initState();
@@ -89,7 +88,7 @@ class _UserListState extends State<UserList> {
     var pushId = prefs.getString(PUSH_ID);
     var userId = prefs.getString(USER_ID);
 
-    var base = 'https://us-central1-tictactoe-64902.cloudfunctions.net';
+    var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
     String dataURL = '$base/sendNotification2?to=${user
         .pushId}&fromPushId=$pushId&fromId=$userId&fromName=$username&type=invite';
     print(dataURL);
