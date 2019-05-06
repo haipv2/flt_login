@@ -3,24 +3,27 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/ui/ai/ai.dart';
-import 'package:flt_login/src/ui/shape/circle/circle..dart';
+import 'package:flt_login/src/ui/shape/circle/circle.dart';
 import 'package:flt_login/src/ui/shape/cross/cross.dart';
 import 'package:flt_login/src/ui/victory.dart';
 import 'package:flt_login/src/ui/victory_checker.dart';
 import 'package:flt_login/src/ui/victory_line.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class GamePage extends StatefulWidget {
-  GamePage({Key key, this.title, this.type, this.me, this.gameId, this.withId})
+class Game extends StatefulWidget {
+  final SharedPreferences prefs;
+  Game({Key key, this.title, this.type, this.me, this.gameId, this.withId, this.prefs})
       : super(key: key);
 
   final String title, type, me, gameId, withId;
 
   @override
-  GameState createState() => GameState(type: type, me: me, gameId: gameId, withId: withId);
+  GameState createState() =>
+      GameState(type: type, me: me, gameId: gameId, withId: withId);
 }
 
-class GameState extends State<GamePage> {
+class GameState extends State<Game> {
   BuildContext _context;
   List<List<String>> field = [
     ['', '', ''],
@@ -84,24 +87,38 @@ class GameState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    print('game build');
-    print(type);
-    print(me);
-    print(gameId);
-    print(withId);
-
     ai = AI(field, playerChar, aiChar);
 
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        body: Builder(builder: (BuildContext context) {
-          _context = context;
-          return Center(
-              child: Stack(
-                  children: [buildGrid(), buildField(), buildVictoryLine()]));
-        }));
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+            actions: <Widget>[
+              Container(
+                margin: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.all(3.0),
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(5)),
+                child: InkWell(
+                  onTap: _showDialog,
+                  child: Text(
+                    'X',
+                    style:
+                        TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: Builder(builder: (BuildContext context) {
+            _context = context;
+            return Center(
+                child: Stack(
+                    children: [buildGrid(), buildField(), buildVictoryLine()]));
+          })),
+    );
   }
 
   Widget buildGrid() => AspectRatio(
@@ -311,5 +328,29 @@ class GameState extends State<GamePage> {
     String text = playersTurn ? 'Your turn' : 'Opponent\'s turn';
     print(text);
     Scaffold.of(_context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  void _showDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Text('Do you want to quit the game ?'),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop(CANCEL);
+                },
+              ),
+              FlatButton(
+                child: Text('Yes'),
+                onPressed: () {
+                  Navigator.pushNamed(context, MYPAGE);
+                },
+              )
+            ],
+          );
+        });
   }
 }

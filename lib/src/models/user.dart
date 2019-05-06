@@ -5,10 +5,12 @@ class User {
   String _password;
   String _role;
   int _gender;
+  String userId, name, photoUrl, pushId;
 
   int get gender => _gender;
 
   User();
+  User.userForPush(this.userId,this.name,this.photoUrl,this.pushId);
 
   User.fromJson(Map<String, dynamic> json) {
     firstname = json['first_name'];

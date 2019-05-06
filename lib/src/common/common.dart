@@ -28,3 +28,8 @@ const USER_NAME = 'userName';
 const SINGLE_GAME = 'singleGame';
 const MULTIPLAYER = 'Multiplayer';
 const USER_LIST = 'userList';
+
+const CANCEL='cancel';
+const YES='yes';
+const MYPAGE='/mypage';
+const ARENA='/arena';

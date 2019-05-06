@@ -40,6 +40,11 @@ android {
         versionName flutterVersionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+        }
+    }
 
     buildTypes {
         release {
