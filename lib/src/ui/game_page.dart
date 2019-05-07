@@ -13,7 +13,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Game extends StatefulWidget {
   final SharedPreferences prefs;
-  Game({Key key, this.title, this.type, this.me, this.gameId, this.withId, this.prefs})
+
+  Game(
+      {Key key,
+      this.title,
+      this.type,
+      this.me,
+      this.gameId,
+      this.withId,
+      this.prefs})
       : super(key: key);
 
   final String title, type, me, gameId, withId;
@@ -26,9 +34,16 @@ class Game extends StatefulWidget {
 class GameState extends State<Game> {
   BuildContext _context;
   List<List<String>> field = [
-    ['', '', ''],
-    ['', '', ''],
-    ['', '', '']
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', ''],
   ];
   AI ai;
   String playerChar = 'X', aiChar = 'O';
@@ -47,7 +62,7 @@ class GameState extends State<Game> {
 
       FirebaseDatabase.instance
           .reference()
-          .child('games')
+          .child(GAME_TBL)
           .child(gameId)
           .onChildAdded
           .listen((Event event) {
@@ -106,7 +121,7 @@ class GameState extends State<Game> {
                   child: Text(
                     'X',
                     style:
-                        TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                        TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -121,6 +136,9 @@ class GameState extends State<Game> {
     );
   }
 
+  ///
+  /// build line
+  ///
   Widget buildGrid() => AspectRatio(
       aspectRatio: 1.0,
       child: Stack(
@@ -128,8 +146,25 @@ class GameState extends State<Game> {
           Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
             buildHorizontalLine,
             buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
+            buildHorizontalLine,
           ]),
           Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
+            buildVerticalLine,
             buildVerticalLine,
             buildVerticalLine,
           ])
@@ -137,15 +172,18 @@ class GameState extends State<Game> {
       ));
 
   Container get buildVerticalLine => Container(
-      margin: EdgeInsets.only(top: 16.0, bottom: 16.0),
-      color: Colors.grey,
-      width: 5.0);
+//      margin: EdgeInsets.only(top: 1.0, bottom: 1.0),
+      color: Colors.blue,
+      width: 1.0);
 
   Container get buildHorizontalLine => Container(
-      margin: EdgeInsets.only(left: 16.0, right: 16.0),
-      color: Colors.grey,
-      height: 5.0);
+//      margin: EdgeInsets.only(left: 16.0, right: 16.0),
+      color: Colors.blue,
+      height: 1.0);
 
+  ///
+  /// build field.
+  ///
   Widget buildField() => AspectRatio(
       aspectRatio: 1.0,
       child:
@@ -157,6 +195,13 @@ class GameState extends State<Game> {
               buildCell(0, 0),
               buildCell(0, 1),
               buildCell(0, 2),
+              buildCell(0, 3),
+              buildCell(0, 4),
+              buildCell(0, 5),
+              buildCell(0, 6),
+              buildCell(0, 7),
+              buildCell(0, 8),
+              buildCell(0, 9),
             ])),
         Expanded(
             child: Row(
@@ -165,6 +210,13 @@ class GameState extends State<Game> {
               buildCell(1, 0),
               buildCell(1, 1),
               buildCell(1, 2),
+              buildCell(1, 3),
+              buildCell(1, 4),
+              buildCell(1, 5),
+              buildCell(1, 6),
+              buildCell(1, 7),
+              buildCell(1, 8),
+              buildCell(1, 9),
             ])),
         Expanded(
             child: Row(
@@ -173,7 +225,119 @@ class GameState extends State<Game> {
               buildCell(2, 0),
               buildCell(2, 1),
               buildCell(2, 2),
-            ]))
+              buildCell(2, 3),
+              buildCell(2, 4),
+              buildCell(2, 5),
+              buildCell(2, 6),
+              buildCell(2, 7),
+              buildCell(2, 8),
+              buildCell(2, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(3, 0),
+              buildCell(3, 1),
+              buildCell(3, 2),
+              buildCell(3, 3),
+              buildCell(3, 4),
+              buildCell(3, 5),
+              buildCell(3, 6),
+              buildCell(3, 7),
+              buildCell(3, 8),
+              buildCell(3, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(4, 0),
+              buildCell(4, 1),
+              buildCell(4, 2),
+              buildCell(4, 3),
+              buildCell(4, 4),
+              buildCell(4, 5),
+              buildCell(4, 6),
+              buildCell(4, 7),
+              buildCell(4, 8),
+              buildCell(4, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(5, 0),
+              buildCell(5, 1),
+              buildCell(5, 2),
+              buildCell(5, 3),
+              buildCell(5, 4),
+              buildCell(5, 5),
+              buildCell(5, 6),
+              buildCell(5, 7),
+              buildCell(5, 8),
+              buildCell(5, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(6, 0),
+              buildCell(6, 1),
+              buildCell(6, 2),
+              buildCell(6, 3),
+              buildCell(6, 4),
+              buildCell(6, 5),
+              buildCell(6, 6),
+              buildCell(6, 7),
+              buildCell(6, 8),
+              buildCell(6, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(7, 0),
+              buildCell(7, 1),
+              buildCell(7, 2),
+              buildCell(7, 3),
+              buildCell(7, 4),
+              buildCell(7, 5),
+              buildCell(7, 6),
+              buildCell(7, 7),
+              buildCell(7, 8),
+              buildCell(7, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(8, 0),
+              buildCell(8, 1),
+              buildCell(8, 2),
+              buildCell(8, 3),
+              buildCell(8, 4),
+              buildCell(8, 5),
+              buildCell(8, 6),
+              buildCell(8, 7),
+              buildCell(8, 8),
+              buildCell(8, 9),
+            ])),
+        Expanded(
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+              buildCell(9, 0),
+              buildCell(9, 1),
+              buildCell(9, 2),
+              buildCell(9, 3),
+              buildCell(9, 4),
+              buildCell(9, 5),
+              buildCell(9, 6),
+              buildCell(9, 7),
+              buildCell(9, 8),
+              buildCell(9, 9),
+            ])),
       ]));
 
   Widget buildCell(int row, int column) => AspectRatio(
@@ -196,9 +360,9 @@ class GameState extends State<Game> {
     var cell = field[row][column];
     if (cell.isNotEmpty) {
       if (cell == 'X') {
-        return Container(padding: EdgeInsets.all(24.0), child: Cross());
+        return Container(padding: EdgeInsets.all(1.0), child: Cross());
       } else {
-        return Container(padding: EdgeInsets.all(24.0), child: Circle());
+        return Container(padding: EdgeInsets.all(1.0), child: Circle());
       }
     } else {
       return null;
@@ -216,7 +380,7 @@ class GameState extends State<Game> {
     if (type != null && type == 'wifi') {
       FirebaseDatabase.instance
           .reference()
-          .child('games')
+          .child(GAME_TBL)
           .child(gameId)
           .child('${row}_${column}')
           .set(me);
@@ -284,9 +448,16 @@ class GameState extends State<Game> {
                 setState(() {
                   victory = null;
                   field = [
-                    ['', '', ''],
-                    ['', '', ''],
-                    ['', '', '']
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
+                    ['', '', '', '', '', '', '', '', '', ''],
                   ];
                   playersTurn = true;
                 });
@@ -301,13 +472,13 @@ class GameState extends State<Game> {
   void restart() async {
     await FirebaseDatabase.instance
         .reference()
-        .child('games')
+        .child(GAME_TBL)
         .child(gameId)
         .set(null);
 
     await FirebaseDatabase.instance
         .reference()
-        .child('games')
+        .child(GAME_TBL)
         .child(gameId)
         .child('restart')
         .set(true);
@@ -320,9 +491,16 @@ class GameState extends State<Game> {
   void cleanUp() {
     victory = null;
     field = [
-      ['', '', ''],
-      ['', '', ''],
-      ['', '', '']
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '', ''],
     ];
     playersTurn = me == 'X';
     String text = playersTurn ? 'Your turn' : 'Opponent\'s turn';

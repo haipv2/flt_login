@@ -33,3 +33,5 @@ const CANCEL='cancel';
 const YES='yes';
 const MYPAGE='/mypage';
 const ARENA='/arena';
+
+const GAME_TBL='games_tbl';

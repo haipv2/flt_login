@@ -6,8 +6,8 @@ class CrossPainter extends CustomPainter {
 
   CrossPainter(this._fraction) {
     _paint = Paint()
-      ..color = Colors.blue
-      ..strokeWidth = 10.0
+      ..color = Colors.green
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
   }
 

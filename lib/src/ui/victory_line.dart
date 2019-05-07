@@ -16,7 +16,7 @@ class VictoryLine extends CustomPainter {
     this._victory = victory;
     _paint = Paint();
     _paint.color = Colors.deepOrange;
-    _paint.strokeWidth = 10.0;
+    _paint.strokeWidth = 5.0;
     _paint.strokeCap = StrokeCap.round;
   }
 

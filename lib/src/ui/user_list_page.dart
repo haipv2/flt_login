@@ -95,7 +95,7 @@ class _UserListState extends State<UserList> {
     String gameId = '$userId-${user.userId}';
     FirebaseDatabase.instance
         .reference()
-        .child('games')
+        .child(GAME_TBL)
         .child(gameId)
         .set(null);
     http.Response response = await http.get(dataURL);
