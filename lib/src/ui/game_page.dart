@@ -1,534 +1,308 @@
-import 'dart:async';
+import 'dart:math';
 
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/common/common.dart';
-import 'package:flt_login/src/ui/ai/ai.dart';
-import 'package:flt_login/src/ui/shape/circle/circle.dart';
-import 'package:flt_login/src/ui/shape/cross/cross.dart';
-import 'package:flt_login/src/ui/victory.dart';
-import 'package:flt_login/src/ui/victory_checker.dart';
-import 'package:flt_login/src/ui/victory_line.dart';
+import 'package:flt_login/src/models/user.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'cell.dart';
+import 'game_dialog.dart';
+import 'game_item.dart';
+import 'my_page.dart';
 
 class Game extends StatefulWidget {
   final SharedPreferences prefs;
+  FirebaseUser firebaseUser;
+  User player1 = User.userForPush('1', 'userName1', 'photoUrl1', 'pushId1')
+    ..firstname = 'first name'
+    ..lastname = 'last name'
+    ..email = 'email1@gmail.com';
 
-  Game(
-      {Key key,
-      this.title,
-      this.type,
-      this.me,
-      this.gameId,
-      this.withId,
-      this.prefs})
-      : super(key: key);
+  User player2 = User.userForPush('2', 'userName2', 'photoUrl2', 'pushId2');
 
-  final String title, type, me, gameId, withId;
+  Game({this.prefs});
 
   @override
-  GameState createState() =>
-      GameState(type: type, me: me, gameId: gameId, withId: withId);
+  _GameState createState() => _GameState();
 }
 
-class GameState extends State<Game> {
-  BuildContext _context;
-  List<List<String>> field = [
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-    ['', '', '', '', '', '', '', '', '', ''],
-  ];
-  AI ai;
-  String playerChar = 'X', aiChar = 'O';
-  bool playersTurn = true;
-  Victory victory;
-  final String type, me, gameId, withId;
-
-  GameState({this.type, this.me, this.gameId, this.withId});
+class _GameState extends State<Game> {
+  List<GameItem> itemlist;
+  List<int> player1List;
+  List<int> player2List;
+  var activePlayer;
 
   @override
   void initState() {
     super.initState();
-    if (me != null) {
-      playersTurn = me == 'X';
-      playerChar = me;
-
-      FirebaseDatabase.instance
-          .reference()
-          .child(GAME_TBL)
-          .child(gameId)
-          .onChildAdded
-          .listen((Event event) {
-        String key = event.snapshot.key;
-        if (key != 'restart') {
-          int row = int.parse(key.substring(0, 1));
-          int column = int.parse(key.substring(2, 3));
-          if (field[row][column] != me) {
-            setState(() {
-              field[row][column] = event.snapshot.value;
-              playersTurn = true;
-              Timer(Duration(milliseconds: 600), () {
-                setState(() {
-                  checkForVictory();
-                });
-              });
-            });
-          }
-        } else if (key == 'restart') {
-          FirebaseDatabase.instance.reference().child(gameId).set(null);
-
-          setState(() {
-            Scaffold.of(_context).hideCurrentSnackBar();
-            cleanUp();
-          });
-        }
-      });
-
-      // Haven't figured out how to display a Snackbar during build yet
-      new Timer(Duration(milliseconds: 1000), () {
-        String text = playersTurn ? 'Your turn' : 'Opponent\'s turn';
-        print(text);
-        Scaffold.of(_context).showSnackBar(SnackBar(content: Text(text)));
-      });
-    }
+    itemlist = doInit();
   }
+
+  List<GameItem> doInit() {
+    player1List = new List();
+    player2List = new List();
+    activePlayer = 1;
+
+    List<GameItem> gameItems = new List();
+    for (var i = 0; i < SUM; i++) {
+      gameItems.add(new GameItem(id: i));
+    }
+    return gameItems;
+  }
+
+  var _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    ai = AI(field, playerChar, aiChar);
+    Widget playerInfo = Container(
+        color: Colors.orange,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            _buildPlayer(widget.player1),
+            _buildText('VS'),
+            _buildPlayer(widget.player2),
+          ],
+        ));
 
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-          appBar: AppBar(
-            title: Text(widget.title),
-            actions: <Widget>[
-              Container(
-                margin: const EdgeInsets.all(15.0),
-                padding: const EdgeInsets.all(3.0),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(5)),
-                child: InkWell(
-                  onTap: _showDialog,
-                  child: Text(
-                    'X',
-                    style:
-                        TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
+    return new Scaffold(
+      key: _scaffoldKey,
+      body: Container(
+        decoration: BoxDecoration(color: Colors.white),
+        child: new Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            SizedBox(
+              height: 20.0,
+            ),
+            playerInfo,
+            new Expanded(
+              child: new GridView.builder(
+                  gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: COLUMNS,
+                      crossAxisSpacing: 0.5,
+                      mainAxisSpacing: 0.5),
+                  itemCount: itemlist.length,
+                  itemBuilder: (context, i) => new SizedBox(
+                        width: 20.0,
+                        height: 20.0,
+                        child: new RaisedButton(
+                          padding: const EdgeInsets.all(1.0),
+                          onPressed: itemlist[i].enabled
+                              ? () => playGame(itemlist[i], i)
+                              : null,
+                          child: itemlist[i],
+                          color: itemlist[i].bg,
+                          disabledColor: itemlist[i].bg,
+                        ),
+                      )),
+            ),
+
+//              new RaisedButton(
+//                child: new Text(
+//                  'Reset',
+//                  style: new TextStyle(color: Colors.white, fontSize: 20.0),
+//                ),
+//                color: Colors.red,
+//                padding: const EdgeInsets.all(20.0),
+//                onPressed: resetGame,
+//              )
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.orange,
+        child: BottomNavigationBar(
+            backgroundColor: Colors.deepOrangeAccent,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.insert_emoticon),
+                title: Text(''),
+              ),
+              BottomNavigationBarItem(
+                icon: GestureDetector(
+                  onTap: _backToMain,
+                  child: Image.asset(
+                    SURRENDER_FLAG,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ),
-            ],
-          ),
-          body: Builder(builder: (BuildContext context) {
-            _context = context;
-            return Center(
-                child: Stack(
-                    children: [buildGrid(), buildField(), buildVictoryLine()]));
-          })),
+                title: Text('surrender'),
+              )
+            ]),
+      ),
     );
   }
 
-  ///
-  /// build line
-  ///
-  Widget buildGrid() => AspectRatio(
-      aspectRatio: 1.0,
-      child: Stack(
-        children: [
-          Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-            buildHorizontalLine,
-          ]),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-            buildVerticalLine,
-          ])
-        ],
-      ));
-
-  Container get buildVerticalLine => Container(
-//      margin: EdgeInsets.only(top: 1.0, bottom: 1.0),
-      color: Colors.blue,
-      width: 1.0);
-
-  Container get buildHorizontalLine => Container(
-//      margin: EdgeInsets.only(left: 16.0, right: 16.0),
-      color: Colors.blue,
-      height: 1.0);
-
-  ///
-  /// build field.
-  ///
-  Widget buildField() => AspectRatio(
-      aspectRatio: 1.0,
-      child:
-          Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(0, 0),
-              buildCell(0, 1),
-              buildCell(0, 2),
-              buildCell(0, 3),
-              buildCell(0, 4),
-              buildCell(0, 5),
-              buildCell(0, 6),
-              buildCell(0, 7),
-              buildCell(0, 8),
-              buildCell(0, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(1, 0),
-              buildCell(1, 1),
-              buildCell(1, 2),
-              buildCell(1, 3),
-              buildCell(1, 4),
-              buildCell(1, 5),
-              buildCell(1, 6),
-              buildCell(1, 7),
-              buildCell(1, 8),
-              buildCell(1, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(2, 0),
-              buildCell(2, 1),
-              buildCell(2, 2),
-              buildCell(2, 3),
-              buildCell(2, 4),
-              buildCell(2, 5),
-              buildCell(2, 6),
-              buildCell(2, 7),
-              buildCell(2, 8),
-              buildCell(2, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(3, 0),
-              buildCell(3, 1),
-              buildCell(3, 2),
-              buildCell(3, 3),
-              buildCell(3, 4),
-              buildCell(3, 5),
-              buildCell(3, 6),
-              buildCell(3, 7),
-              buildCell(3, 8),
-              buildCell(3, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(4, 0),
-              buildCell(4, 1),
-              buildCell(4, 2),
-              buildCell(4, 3),
-              buildCell(4, 4),
-              buildCell(4, 5),
-              buildCell(4, 6),
-              buildCell(4, 7),
-              buildCell(4, 8),
-              buildCell(4, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(5, 0),
-              buildCell(5, 1),
-              buildCell(5, 2),
-              buildCell(5, 3),
-              buildCell(5, 4),
-              buildCell(5, 5),
-              buildCell(5, 6),
-              buildCell(5, 7),
-              buildCell(5, 8),
-              buildCell(5, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(6, 0),
-              buildCell(6, 1),
-              buildCell(6, 2),
-              buildCell(6, 3),
-              buildCell(6, 4),
-              buildCell(6, 5),
-              buildCell(6, 6),
-              buildCell(6, 7),
-              buildCell(6, 8),
-              buildCell(6, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(7, 0),
-              buildCell(7, 1),
-              buildCell(7, 2),
-              buildCell(7, 3),
-              buildCell(7, 4),
-              buildCell(7, 5),
-              buildCell(7, 6),
-              buildCell(7, 7),
-              buildCell(7, 8),
-              buildCell(7, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(8, 0),
-              buildCell(8, 1),
-              buildCell(8, 2),
-              buildCell(8, 3),
-              buildCell(8, 4),
-              buildCell(8, 5),
-              buildCell(8, 6),
-              buildCell(8, 7),
-              buildCell(8, 8),
-              buildCell(8, 9),
-            ])),
-        Expanded(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-              buildCell(9, 0),
-              buildCell(9, 1),
-              buildCell(9, 2),
-              buildCell(9, 3),
-              buildCell(9, 4),
-              buildCell(9, 5),
-              buildCell(9, 6),
-              buildCell(9, 7),
-              buildCell(9, 8),
-              buildCell(9, 9),
-            ])),
-      ]));
-
-  Widget buildCell(int row, int column) => AspectRatio(
-      aspectRatio: 1.0,
-      child: GestureDetector(
-          onTap: () {
-            if (!gameIsDone() && playersTurn) {
-              setState(() {
-                displayPlayersTurn(row, column);
-
-                if (!gameIsDone() && type == null) {
-                  displayAiTurn();
-                }
-              });
-            }
-          },
-          child: buildCellItem(row, column)));
-
-  Widget buildCellItem(int row, int column) {
-    var cell = field[row][column];
-    if (cell.isNotEmpty) {
-      if (cell == 'X') {
-        return Container(padding: EdgeInsets.all(1.0), child: Cross());
-      } else {
-        return Container(padding: EdgeInsets.all(1.0), child: Circle());
-      }
-    } else {
-      return null;
-    }
+  Widget buildCell(BuildContext context, int i, activePlayer) {
+    return Cell(context, i, activePlayer, null);
   }
 
-  Widget buildVictoryLine() => AspectRatio(
-      aspectRatio: 1.0, child: CustomPaint(painter: VictoryLine(victory)));
-
-  void displayPlayersTurn(int row, int column) {
-    print('clicked on row $row column $column');
-    playersTurn = false;
-    field[row][column] = playerChar;
-
-    if (type != null && type == 'wifi') {
-      FirebaseDatabase.instance
-          .reference()
-          .child(GAME_TBL)
-          .child(gameId)
-          .child('${row}_${column}')
-          .set(me);
-    }
-
-    Timer(Duration(milliseconds: 600), () {
-      setState(() {
-        checkForVictory();
-      });
-    });
-  }
-
-  void displayAiTurn() {
-    Timer(Duration(milliseconds: 1000), () {
-      setState(() {
-        // AI turn
-        var aiDecision = ai.getDecision();
-        field[aiDecision.row][aiDecision.column] = aiChar;
-        playersTurn = true;
-        Timer(Duration(milliseconds: 600), () {
-          setState(() {
-            checkForVictory();
-          });
-        });
-      });
-    });
-  }
-
-  bool gameIsDone() {
-    return allCellsAreTaken() || victory != null;
-  }
-
-  bool allCellsAreTaken() {
-    return field[0][0].isNotEmpty &&
-        field[0][1].isNotEmpty &&
-        field[0][2].isNotEmpty &&
-        field[1][0].isNotEmpty &&
-        field[1][1].isNotEmpty &&
-        field[1][2].isNotEmpty &&
-        field[2][0].isNotEmpty &&
-        field[2][1].isNotEmpty &&
-        field[2][2].isNotEmpty;
-  }
-
-  void checkForVictory() {
-    victory = VictoryChecker.checkForVictory(field, playerChar);
-    if (victory != null) {
-      String message;
-
-      if (victory.winner == PLAYER_WINNER) {
-        message = 'You Win!';
-      } else if (victory.winner == AI_WINNER) {
-        message = type == null ? 'AI Win!' : 'You loose!';
-      } else if (victory.winner == DRAFT) {
-        message = 'Draft';
-      }
-      print(message);
-      Scaffold.of(_context).showSnackBar(SnackBar(
-        content: Text(message),
-        duration: Duration(minutes: 1),
-        action: SnackBarAction(
-            label: 'Retry',
-            onPressed: () {
-              if (type == null) {
-                setState(() {
-                  victory = null;
-                  field = [
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                    ['', '', '', '', '', '', '', '', '', ''],
-                  ];
-                  playersTurn = true;
-                });
-              } else {
-                restart();
-              }
-            }),
-      ));
-    }
-  }
-
-  void restart() async {
-    await FirebaseDatabase.instance
-        .reference()
-        .child(GAME_TBL)
-        .child(gameId)
-        .set(null);
-
-    await FirebaseDatabase.instance
-        .reference()
-        .child(GAME_TBL)
-        .child(gameId)
-        .child('restart')
-        .set(true);
-
+  void resetGame() {
+    if (Navigator.canPop(context)) Navigator.pop(context);
     setState(() {
-      cleanUp();
+      itemlist = doInit();
     });
   }
 
-  void cleanUp() {
-    victory = null;
-    field = [
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-      ['', '', '', '', '', '', '', '', '', ''],
-    ];
-    playersTurn = me == 'X';
-    String text = playersTurn ? 'Your turn' : 'Opponent\'s turn';
-    print(text);
-    Scaffold.of(_context).showSnackBar(SnackBar(content: Text(text)));
+  void playGame(GameItem item, int i) {
+    setState(() {
+//      var imageUrl = '${GameConst.ASSETS_IMAGE}''${activePlayer}.png';
+      var imageUrl = 'assets/images/p$activePlayer.png';
+      var newGameItem = [GameItem(id: i, image: Image.asset(imageUrl))];
+      if (activePlayer == 1) {
+        item.text = "${item.id}";
+        item.bg = Colors.white;
+        itemlist.replaceRange(i, i + 1, newGameItem);
+        activePlayer = 2;
+        player1List.add(item.id);
+      } else {
+        item.text = '${item.id}';
+        itemlist.replaceRange(i, i + 1, newGameItem);
+        activePlayer = 1;
+        player2List.add(item.id);
+      }
+      item.enabled = false;
+      if (player1List.length > 4 || player2List.length > 4) {
+        int winner = checkWinner(item.id);
+        if (winner == 0) {
+          if (itemlist.every((p) => p.text != "")) {
+            showDialog(
+                context: context,
+                builder: (_) =>
+                    new GameDialog('Game title', 'Reset game', resetGame));
+          }
+          /*else {
+          activePlayer == 2 ? autoPlay() : null;
+        }*/
+        }
+      }
+    });
   }
 
-  void _showDialog() {
+  int checkWinner(id) {
+    var winner = 0;
+    player1List.sort((i1, i2) => i1 - i2);
+    player2List.sort((i1, i2) => i1 - i2);
+    //check user 1 win
+    if (activePlayer == 2) {
+      winner = doReferee(player1List, 1, id);
+      //check user 2 win
+    } else {
+      winner = doReferee(player2List, 2, id);
+    }
+
+    if (winner != 0) {
+      if (winner == 1) {
+        showDialog(
+            context: context,
+            builder: (_) => new GameDialog("Player 1 Won",
+                "Press the reset button to start again.", resetGame));
+      } else {
+        showDialog(
+            context: context,
+            builder: (_) => new GameDialog("Player 2 Won",
+                "Press the reset button to start again.", resetGame));
+      }
+    }
+
+    return winner;
+  }
+
+  autoPlay() {
+    var emptyCells = new List();
+    var list = new List.generate(SUM, (i) => i + 1);
+    for (var cellId in list) {
+      if (!(player1List.contains(cellId) || player2List.contains(cellId))) {
+        emptyCells.add(cellId);
+      }
+    }
+    var r = new Random();
+    var randIndex = r.nextInt(emptyCells.length - 1);
+    var cellId = emptyCells[randIndex];
+    int i = itemlist.indexWhere((p) => p.id == cellId);
+    playGame(itemlist[i], i);
+  }
+
+  /// detect winner
+  int doReferee(List<int> players, int winner, int currentCell) {
+    // check vertically
+    for (var i = 0; i < players.length; i++) {
+      var player = players[i];
+      var vertically = players.contains(player + COLUMNS) &&
+          players.contains(player + COLUMNS * 2) &&
+          players.contains(player + COLUMNS * 3) &&
+          players.contains(player + COLUMNS * 4);
+      if (vertically) return winner;
+      var horizontally = players.contains(player + 1) &&
+          players.contains(player + 2) &&
+          players.contains(player + 3) &&
+          players.contains(player + 4);
+      if (horizontally) return winner;
+      var crossRight = players.contains(player + COLUMNS * 4 + 4) &&
+          players.contains(player + COLUMNS * 3 + 3) &&
+          players.contains(player + COLUMNS * 2 + 2) &&
+          players.contains(player + COLUMNS + 1);
+      if (crossRight) return winner;
+      var crossLeft = players.contains(player + COLUMNS * 4 - 4) &&
+          players.contains(player + COLUMNS * 3 - 3) &&
+          players.contains(player + COLUMNS * 2 - 2) &&
+          players.contains(player + COLUMNS - 1);
+      if (crossLeft) return winner;
+    }
+    return 0;
+  }
+
+  Column _buildPlayer(User player) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(Icons.ac_unit),
+        Container(
+          margin: const EdgeInsets.only(top: 1),
+          child: Text(player.name),
+        )
+      ],
+    );
+  }
+
+  Text _buildText(String s) {
+    return Text(s,
+        style: TextStyle(
+            color: Colors.red, fontSize: 30.0, fontWeight: FontWeight.w600));
+  }
+
+  void _backToMain() {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Text('Do you want to quit the game ?'),
-            actions: <Widget>[
-              FlatButton(
-                child: Text('Close'),
-                onPressed: () {
-                  Navigator.of(context).pop(CANCEL);
-                },
-              ),
-              FlatButton(
-                child: Text('Yes'),
-                onPressed: () {
-                  Navigator.pushNamed(context, MYPAGE);
-                },
-              )
-            ],
-          );
-        });
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text('Do you surrender in this game ?'),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Not'),
+              onPressed: () {
+                Navigator.of(context).pop(CANCEL);
+              },
+            ),
+            FlatButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(_scaffoldKey.currentContext).pop(YES);
+//                return MyPage(widget.player1, prefs: widget.prefs);
+              },
+//          actions: <Widget>[
+//            MyPage(widget.player1, prefs: widget.prefs)
+//          ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }

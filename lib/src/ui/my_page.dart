@@ -64,11 +64,8 @@ class _MyPageState extends State<MyPage> {
       String gameId = '${currentUser.uid}-$fromId';
       Navigator.of(context).push(new MaterialPageRoute(
           builder: (context) => new Game(
-              title: 'Tic Tac Toe',
-              type: "wifi",
-              me: 'X',
-              gameId: gameId,
-              withId: fromId)));
+                prefs: widget.prefs,
+              )));
     } else if (type == 'reject') {}
   }
 
@@ -121,11 +118,8 @@ class _MyPageState extends State<MyPage> {
 
     Navigator.of(context).push(new MaterialPageRoute(
         builder: (context) => new Game(
-            title: 'Tic Tac Toe',
-            type: "wifi",
-            me: 'O',
-            gameId: gameId,
-            withId: fromId)));
+              prefs: widget.prefs,
+            )));
   }
 
   // Not sure how FCM token gets updated yet
@@ -158,12 +152,11 @@ class _MyPageState extends State<MyPage> {
         ),
         onPressed: () {
           print('print single mode');
-//          Navigator.pushNamed(context, ARENA);
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => Game(
-                    title: 'Game title',
-                    prefs: widget.prefs,
-                  )));
+          Navigator.pushNamed(context, ARENA);
+//          Navigator.of(context).pushReplacement(MaterialPageRoute(
+//              builder: (context) => Game(
+//                    prefs: widget.prefs,
+//                  )));
         },
         padding: EdgeInsets.all(12),
         color: Colors.lightBlueAccent,
@@ -267,8 +260,10 @@ class _MyPageState extends State<MyPage> {
     FirebaseUser user = await signInWithGoogle();
     await saveUserToFirebase(user);
 //    Navigator.of(context).pushNamed('userList');
-    Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (context) => UserList(title: 'Friend list',)));
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => UserList(
+              title: 'Friend list',
+            )));
   }
 
   Future<FirebaseUser> signInWithGoogle() async {

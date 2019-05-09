@@ -35,3 +35,8 @@ const MYPAGE='/mypage';
 const ARENA='/arena';
 
 const GAME_TBL='games_tbl';
+const COLUMNS = 12;
+const ROWS = 13;
+const SUM=COLUMNS*ROWS;
+const WIN_POINT=5;
+const SURRENDER_FLAG='assets/images/surrender.gif';

@@ -13,6 +13,7 @@ class CrossState extends State<Cross>
   AnimationController controller;
   double fraction = 0.0;
 
+
   initState() {
     super.initState();
     controller = AnimationController(
@@ -20,6 +21,7 @@ class CrossState extends State<Cross>
     animation = Tween(begin: 0.0, end: 1.0).animate(controller)
       ..addListener(() {
         setState(() {
+          print('animate value: ${animation.value}');
           fraction = animation.value;
         });
       });

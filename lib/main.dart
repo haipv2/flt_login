@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
               ),
           ARENA: (BuildContext context) =>
               Game(
-                title: 'ARENA',
+                prefs: preferences,
               ),
         },
       ),
