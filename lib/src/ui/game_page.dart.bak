@@ -114,6 +114,7 @@ class GameState extends State<Game> {
                 margin: const EdgeInsets.all(15.0),
                 padding: const EdgeInsets.all(3.0),
                 decoration: BoxDecoration(
+                    color:Colors.red,inserBoxDecorationt_emoticon
                     border: Border.all(color: Colors.black),
                     borderRadius: BorderRadius.circular(5)),
                 child: InkWell(

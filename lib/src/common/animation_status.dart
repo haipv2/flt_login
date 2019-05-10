@@ -1,0 +1,1 @@
+enum AnimataionCommonStatus { closed, open, animating }

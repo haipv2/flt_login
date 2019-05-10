@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/common/common.dart';
@@ -8,11 +9,14 @@ import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flt_login/src/ui/user_list_page.dart';
 import 'package:flt_login/src/utils/map_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/animation.dart';
+import '../common/animation_status.dart';
 
 class MyPage extends StatefulWidget {
   final User user;
@@ -24,14 +28,49 @@ class MyPage extends StatefulWidget {
   _MyPageState createState() => _MyPageState();
 }
 
-class _MyPageState extends State<MyPage> {
+class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  AnimationController _controller;
+  Animation _firstAnimationMenu;
+  AnimationController _controllerHide;
+  Animation _firstAnimationMenuHide;
+  Animation _lateAnimationMenu;
+  AnimataionCommonStatus animataionCommonStatus;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _controller =
+        AnimationController(vsync: this, duration: Duration(seconds: 2));
+    _controllerHide =
+        AnimationController(vsync: this, duration: Duration(seconds: 2));
+
+    _firstAnimationMenu = Tween(begin: -1.0, end: 0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn))
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          animataionCommonStatus = AnimataionCommonStatus.open;
+        } else if (status == AnimationStatus.dismissed) {
+          animataionCommonStatus = AnimataionCommonStatus.closed;
+        } else {
+          animataionCommonStatus = AnimataionCommonStatus.animating;
+        }
+      });
+    _firstAnimationMenuHide = Tween(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _controllerHide, curve: Curves.fastOutSlowIn));
+
+    _lateAnimationMenu = Tween(begin: -1.0, end: 0).animate(CurvedAnimation(
+        parent: _controller,
+        curve: Interval(0.3, 1.0, curve: Curves.fastOutSlowIn)));
+
     firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) {
         print("onMessage: $message");
@@ -144,62 +183,104 @@ class _MyPageState extends State<MyPage> {
 
   @override
   Widget build(BuildContext context) {
-    var singleMode = Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        onPressed: () {
-          print('print single mode');
-          Navigator.pushNamed(context, ARENA);
-//          Navigator.of(context).pushReplacement(MaterialPageRoute(
-//              builder: (context) => Game(
-//                    prefs: widget.prefs,
-//                  )));
-        },
-        padding: EdgeInsets.all(12),
-        color: Colors.lightBlueAccent,
-        child: Text('Single mode', style: TextStyle(color: Colors.white)),
-      ),
-    );
-    var playWithFriend = Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        onPressed: () {
-          print('play with friends');
-          openFriendList();
-        },
-        padding: EdgeInsets.all(12),
-        color: Colors.lightBlueAccent,
-        child: Text('Play with friends', style: TextStyle(color: Colors.white)),
-      ),
-    );
-    ;
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('demo login'),
-        ),
-        drawer: myPageDrawer(),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            singleMode,
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+    double width = MediaQuery.of(context).size.width;
+    _controller.forward().orCancel;
+    Widget singleMode() => Transform(
+          transform: Matrix4.translationValues(
+              _firstAnimationMenu.value * width, 0, 0),
+          child: ButtonTheme(
+            minWidth: 200.0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: RaisedButton(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                onPressed: () {
+                  print('print single mode');
+                  _hideMenuAnimate();
+                  Navigator.pushNamed(context, ARENA);
+                },
+                padding: EdgeInsets.all(12),
+                color: Colors.lightBlueAccent,
+                child:
+                    Text('Single mode', style: TextStyle(color: Colors.white)),
+              ),
             ),
-            playWithFriend,
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
-            )
-          ],
-        ),
-      ),
+          ),
+        );
+    Widget playWithFriend() => Transform(
+        transform: Matrix4.translationValues(
+            _firstAnimationMenu.value * width, 0.0, 0.0),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 16.0),
+          child: ButtonTheme(
+            minWidth: 200.0,
+            child: RaisedButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              onPressed: () {
+                print('play with friends');
+                openFriendList();
+              },
+              padding: EdgeInsets.all(12),
+              color: Colors.lightBlueAccent,
+              child: Text('Play with friends',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ));
+    Widget quit() => Transform(
+        transform: Matrix4.translationValues(
+            _lateAnimationMenu.value * width, 0.0, 0.0),
+        child: ButtonTheme(
+          minWidth: 200.0,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: RaisedButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              onPressed: () {
+                print('Quit');
+                exit(0);
+              },
+              padding: EdgeInsets.all(12),
+              color: Colors.lightBlueAccent,
+              child: Text('Quit', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ));
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (BuildContext context, Widget child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('demo login'),
+            leading: Container(),
+          ),
+          drawer: myPageDrawer(),
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              singleMode(),
+              Container(
+                margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+              ),
+              playWithFriend(),
+              Container(
+                margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+              ),
+              quit(),
+              Container(
+                margin: EdgeInsets.fromLTRB(0, 5, 0, 5),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -314,5 +395,14 @@ class _MyPageState extends State<MyPage> {
     prefs.setString(USER_ID, userId);
     prefs.setString(PUSH_ID, pushId);
     prefs.setString(USER_NAME, userName);
+  }
+
+  void _hideMenuAnimate() {
+    if (animataionCommonStatus == AnimataionCommonStatus.open) {
+//      _controller.reset();
+//      _firstAnimationMenu = Tween(begin: 0.0, end: 1.0).animate(
+//          CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn));
+      _controllerHide.forward();
+    }
   }
 }

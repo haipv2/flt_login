@@ -10,6 +10,7 @@ import 'cell.dart';
 import 'game_dialog.dart';
 import 'game_item.dart';
 import 'my_page.dart';
+import 'package:flutter_reactive_button/flutter_reactive_button.dart';
 
 class Game extends StatefulWidget {
   final SharedPreferences prefs;
@@ -33,6 +34,13 @@ class _GameState extends State<Game> {
   List<int> player2List;
   var activePlayer;
 
+  List<ReactiveIconDefinition> _icons = <ReactiveIconDefinition>[
+    ReactiveIconDefinition(
+      assetIcon: 'assets/images/mess.gif',
+      code: 'mess',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +60,7 @@ class _GameState extends State<Game> {
   }
 
   var _scaffoldKey = GlobalKey<ScaffoldState>();
+  String _icon;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +127,29 @@ class _GameState extends State<Game> {
             backgroundColor: Colors.deepOrangeAccent,
             items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.insert_emoticon),
+                icon: ReactiveButton(
+                  child: Container(
+//                    decoration: BoxDecoration(
+//                        border: Border.all(color: Colors.black, width: 1.0)),
+                    color: Colors.white,
+//                    width: 80.0,
+//                    height: 40.0,
+                    child: Center(
+                      child: Icon(Icons.insert_emoticon),
+                    ),
+                  ),
+                  containerAbove: false,
+                  iconWidth: 32.0,
+                  iconGrowRatio: 1.5,
+                  roundIcons: false,
+                  icons: _icons,
+                  onTap: () => print('on tap'),
+                  onSelected: (ReactiveIconDefinition button) {
+                    setState(() {
+                      _icon = button.code;
+                    });
+                  },
+                ),
                 title: Text(''),
               ),
               BottomNavigationBarItem(
