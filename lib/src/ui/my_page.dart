@@ -1,22 +1,22 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/ui/game_page.dart';
 import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flt_login/src/ui/user_list_page.dart';
 import 'package:flt_login/src/utils/map_utils.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/animation.dart';
-import '../common/animation_status.dart';
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../common/game_enums.dart';
 
 class MyPage extends StatefulWidget {
   final User user;
@@ -35,7 +35,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   AnimationController _controller;
   Animation _firstAnimationMenu;
   AnimationController _controllerHide;
-  Animation _firstAnimationMenuHide;
   Animation _lateAnimationMenu;
   AnimataionCommonStatus animataionCommonStatus;
 
@@ -64,9 +63,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
           animataionCommonStatus = AnimataionCommonStatus.animating;
         }
       });
-    _firstAnimationMenuHide = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _controllerHide, curve: Curves.fastOutSlowIn));
-
     _lateAnimationMenu = Tween(begin: -1.0, end: 0).animate(CurvedAnimation(
         parent: _controller,
         curve: Interval(0.3, 1.0, curve: Curves.fastOutSlowIn)));
@@ -103,6 +99,9 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
       String gameId = '${currentUser.uid}-$fromId';
       Navigator.of(context).push(new MaterialPageRoute(
           builder: (context) => new Game(
+                GameMode.friends,
+                null,
+                null,
                 prefs: widget.prefs,
               )));
     } else if (type == 'reject') {}
@@ -152,11 +151,12 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
         '$base/sendNotification2?to=$fromPushId&fromPushId=$pushId&fromId=$userId&fromName=$username&type=accept';
     print(dataURL);
     http.Response response = await http.get(dataURL);
-
     String gameId = '$fromId-$userId';
-
     Navigator.of(context).push(new MaterialPageRoute(
         builder: (context) => new Game(
+              GameMode.friends,
+              null,
+              null,
               prefs: widget.prefs,
             )));
   }
@@ -198,7 +198,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 ),
                 onPressed: () {
                   print('print single mode');
-                  _hideMenuAnimate();
+//                  _hideMenuAnimate();
                   Navigator.pushNamed(context, ARENA);
                 },
                 padding: EdgeInsets.all(12),
@@ -259,7 +259,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
         return Scaffold(
           appBar: AppBar(
             title: Text('demo login'),
-            leading: Container(),
+//            leading: Container(),
           ),
           drawer: myPageDrawer(),
           body: Column(
@@ -399,9 +399,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
 
   void _hideMenuAnimate() {
     if (animataionCommonStatus == AnimataionCommonStatus.open) {
-//      _controller.reset();
-//      _firstAnimationMenu = Tween(begin: 0.0, end: 1.0).animate(
-//          CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn));
       _controllerHide.forward();
     }
   }

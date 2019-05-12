@@ -9,6 +9,8 @@ import 'package:flt_login/src/ui/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'src/common/game_enums.dart';
+
 void main() {
   SharedPreferences.getInstance().then((prefs) {
     runApp(MyApp(prefs));
@@ -17,13 +19,13 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final SharedPreferences preferences;
-
+  User user;
   MyApp(this.preferences);
 
   @override
   Widget build(BuildContext context) {
     String userJson = preferences.getString('user');
-    User user;
+
     if (userJson != null && userJson.isNotEmpty) {
       Map userMap = jsonDecode(userJson);
       user = User.fromJson(userMap);
@@ -41,13 +43,17 @@ class MyApp extends StatelessWidget {
                     prefs: preferences,
                   )),
         routes: <String, WidgetBuilder>{
-          MYPAGE: (BuildContext context) =>
-              MyPage(
+          MYPAGE: (BuildContext context) => MyPage(
                 user,
                 prefs: preferences,
               ),
-          ARENA: (BuildContext context) =>
-              Game(
+          ARENA: (BuildContext context) => Game(
+                GameMode.single,
+                user,
+                User()
+                  ..firstname = 'AI'
+                  ..userId = 'AI id'
+                  ..name = 'AI name',
                 prefs: preferences,
               ),
         },

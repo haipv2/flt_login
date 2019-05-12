@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/blocs/login_bloc.dart';
 import 'package:flt_login/src/blocs/login_bloc_provider.dart';
+import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/ui/signup_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import 'my_page.dart';
 
 class Loginpage extends StatefulWidget {
   SharedPreferences prefs;
+
   Loginpage(this.prefs);
 
   @override
@@ -219,6 +222,7 @@ class _LoginpageState extends State<Loginpage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onPressed: () {
         _authenticate(context);
+        print('object');
       },
     );
   }

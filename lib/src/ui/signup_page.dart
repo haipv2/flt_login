@@ -41,6 +41,9 @@ class _SignUpState extends State<SignUp> {
     super.dispose();
   }
 
+  final GlobalKey<ScaffoldState> scaffoldSignupKey =
+      new GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     Widget fistName = StreamBuilder(
@@ -296,6 +299,7 @@ class _SignUpState extends State<SignUp> {
       ],
     );
     return Scaffold(
+      key: scaffoldSignupKey,
       appBar: AppBar(
           automaticallyImplyLeading: true,
           title: Text('Register'),
@@ -303,8 +307,10 @@ class _SignUpState extends State<SignUp> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => Loginpage(widget.prefs)));
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Loginpage(widget.prefs)));
             },
           )),
       body: SingleChildScrollView(
@@ -368,7 +374,7 @@ class _SignUpState extends State<SignUp> {
           content: Text('Email is already used. Input another email.'),
           duration: Duration(seconds: 2),
         );
-        Scaffold.of(context).showSnackBar(snackbar);
+        scaffoldSignupKey.currentState.showSnackBar(snackbar);
       } else {
         print('register sucessfully');
         Navigator.push(

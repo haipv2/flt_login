@@ -1,28 +1,26 @@
 import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_reactive_button/flutter_reactive_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../common/game_enums.dart';
 import 'cell.dart';
 import 'game_dialog.dart';
 import 'game_item.dart';
-import 'my_page.dart';
-import 'package:flutter_reactive_button/flutter_reactive_button.dart';
 
 class Game extends StatefulWidget {
   final SharedPreferences prefs;
   FirebaseUser firebaseUser;
-  User player1 = User.userForPush('1', 'userName1', 'photoUrl1', 'pushId1')
-    ..firstname = 'first name'
-    ..lastname = 'last name'
-    ..email = 'email1@gmail.com';
+  User player1;
+  GameMode gameMode;
 
-  User player2 = User.userForPush('2', 'userName2', 'photoUrl2', 'pushId2');
+  User player2;
 
-  Game({this.prefs});
+  Game(this.gameMode, this.player1, this.player2, {this.prefs});
 
   @override
   _GameState createState() => _GameState();
@@ -102,27 +100,18 @@ class _GameState extends State<Game> {
                           onPressed: itemlist[i].enabled
                               ? () => playGame(itemlist[i], i)
                               : null,
-                          child: itemlist[i],
+//                          child: itemlist[i],
+                          child: Text('$i'),
                           color: itemlist[i].bg,
                           disabledColor: itemlist[i].bg,
                         ),
                       )),
             ),
-
-//              new RaisedButton(
-//                child: new Text(
-//                  'Reset',
-//                  style: new TextStyle(color: Colors.white, fontSize: 20.0),
-//                ),
-//                color: Colors.red,
-//                padding: const EdgeInsets.all(20.0),
-//                onPressed: resetGame,
-//              )
           ],
         ),
       ),
       bottomNavigationBar: Container(
-        color: Colors.orange,
+//        color: Colors.orange,
         child: BottomNavigationBar(
             backgroundColor: Colors.deepOrangeAccent,
             items: [
@@ -132,10 +121,10 @@ class _GameState extends State<Game> {
 //                    decoration: BoxDecoration(
 //                        border: Border.all(color: Colors.black, width: 1.0)),
                     color: Colors.white,
-//                    width: 80.0,
-//                    height: 40.0,
+                    width: 80.0,
+                    height: 40.0,
                     child: Center(
-                      child: Icon(Icons.insert_emoticon),
+                      child: Image.asset('assets/images/emotion.png'),
                     ),
                   ),
                   containerAbove: false,
@@ -180,43 +169,47 @@ class _GameState extends State<Game> {
     });
   }
 
-  void playGame(GameItem item, int i) {
+  void playGame(GameItem item, int cellNumber) {
+    print('User click: $activePlayer . Cell number: $cellNumber');
+
     setState(() {
-//      var imageUrl = '${GameConst.ASSETS_IMAGE}''${activePlayer}.png';
       var imageUrl = 'assets/images/p$activePlayer.png';
-      var newGameItem = [GameItem(id: i, image: Image.asset(imageUrl))];
+      var newGameItem = [
+        GameItem(
+          id: cellNumber,
+          image: Image.asset(imageUrl),
+          enabled: false,
+        )
+      ];
+
       if (activePlayer == 1) {
-        item.text = "${item.id}";
-        item.bg = Colors.white;
-        itemlist.replaceRange(i, i + 1, newGameItem);
+        itemlist.replaceRange(cellNumber, cellNumber + 1, newGameItem);
         activePlayer = 2;
-        player1List.add(item.id);
+        player1List.add(cellNumber);
       } else {
-        item.text = '${item.id}';
-        itemlist.replaceRange(i, i + 1, newGameItem);
+        itemlist.replaceRange(cellNumber, cellNumber + 1, newGameItem);
         activePlayer = 1;
-        player2List.add(item.id);
+        player2List.add(cellNumber);
       }
-      item.enabled = false;
+      int winner;
       if (player1List.length > 4 || player2List.length > 4) {
-        int winner = checkWinner(item.id);
-        if (winner == 0) {
-          if (itemlist.every((p) => p.text != "")) {
-            showDialog(
-                context: context,
-                builder: (_) =>
-                    new GameDialog('Game title', 'Reset game', resetGame));
-          }
-          /*else {
-          activePlayer == 2 ? autoPlay() : null;
-        }*/
+        winner = checkWinner(cellNumber);
+      }
+      if (winner == 0) {
+        if (itemlist.every((p) => p.text != "")) {
+          showDialog(
+              context: context,
+              builder: (_) =>
+                  new GameDialog('Game title', 'Reset game', resetGame));
         }
+      } else {
+        activePlayer == 2 ? autoPlay(cellNumber) : null;
       }
     });
   }
 
   int checkWinner(id) {
-    var winner = 0;
+    int winner;
     player1List.sort((i1, i2) => i1 - i2);
     player2List.sort((i1, i2) => i1 - i2);
     //check user 1 win
@@ -244,17 +237,32 @@ class _GameState extends State<Game> {
     return winner;
   }
 
-  autoPlay() {
-    var emptyCells = new List();
+  autoPlay(int cellNumber) {
+    var rowBefore = cellNumber - COLUMNS;
+    var rowAfter = cellNumber + COLUMNS;
+    List aroundCell = [];
+
+    if (rowBefore >= 0) {
+      if (rowBefore - 1 >= 0) aroundCell.add(rowBefore - 1);
+      if (rowBefore >= 0) aroundCell.add(rowBefore);
+      if (rowBefore + 1 >= 0) aroundCell.add(rowBefore + 1);
+    }
+    if (cellNumber - 1 >= 0) aroundCell.add(cellNumber - 1);
+    aroundCell.add(cellNumber + 1);
+    if (rowAfter % 12 != 0 && rowAfter - 1 >= 0) {
+      aroundCell.add(rowAfter - 1);
+    }
+    aroundCell.add(rowAfter);
+    aroundCell.add(rowAfter + 1);
     var list = new List.generate(SUM, (i) => i + 1);
     for (var cellId in list) {
-      if (!(player1List.contains(cellId) || player2List.contains(cellId))) {
-        emptyCells.add(cellId);
+      if (player1List.contains(cellId) || player2List.contains(cellId)) {
+        aroundCell.remove(cellId);
       }
     }
+
     var r = new Random();
-    var randIndex = r.nextInt(emptyCells.length - 1);
-    var cellId = emptyCells[randIndex];
+    var cellId = aroundCell[r.nextInt(aroundCell.length)];
     int i = itemlist.indexWhere((p) => p.id == cellId);
     playGame(itemlist[i], i);
   }
@@ -285,7 +293,7 @@ class _GameState extends State<Game> {
           players.contains(player + COLUMNS - 1);
       if (crossLeft) return winner;
     }
-    return 0;
+    return null;
   }
 
   Column _buildPlayer(User player) {
@@ -296,7 +304,7 @@ class _GameState extends State<Game> {
         Icon(Icons.ac_unit),
         Container(
           margin: const EdgeInsets.only(top: 1),
-          child: Text(player.name),
+          child: Text(player.firstname),
         )
       ],
     );
