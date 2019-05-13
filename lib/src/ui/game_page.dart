@@ -43,6 +43,7 @@ class _GameState extends State<Game> {
   void initState() {
     super.initState();
     itemlist = doInit();
+    doFristTurn();
   }
 
   List<GameItem> doInit() {
@@ -57,7 +58,7 @@ class _GameState extends State<Game> {
     return gameItems;
   }
 
-  var _scaffoldKey = GlobalKey<ScaffoldState>();
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _icon;
 
   @override
@@ -100,8 +101,8 @@ class _GameState extends State<Game> {
                           onPressed: itemlist[i].enabled
                               ? () => playGame(itemlist[i], i)
                               : null,
-//                          child: itemlist[i],
-                          child: Text('$i'),
+                          child: itemlist[i],
+//                          child: Text('$i'),
                           color: itemlist[i].bg,
                           disabledColor: itemlist[i].bg,
                         ),
@@ -215,12 +216,12 @@ class _GameState extends State<Game> {
     //check user 1 win
     if (activePlayer == 2) {
       winner = doReferee(player1List, 1, id);
-      //check user 2 win
     } else {
+      //check user 2 win
       winner = doReferee(player2List, 2, id);
     }
 
-    if (winner != 0) {
+    if (winner != null) {
       if (winner == 1) {
         showDialog(
             context: context,
@@ -241,22 +242,71 @@ class _GameState extends State<Game> {
     var rowBefore = cellNumber - COLUMNS;
     var rowAfter = cellNumber + COLUMNS;
     List aroundCell = [];
-
-    if (rowBefore >= 0) {
-      if (rowBefore - 1 >= 0) aroundCell.add(rowBefore - 1);
-      if (rowBefore >= 0) aroundCell.add(rowBefore);
-      if (rowBefore + 1 >= 0) aroundCell.add(rowBefore + 1);
-    }
-    if (cellNumber - 1 >= 0) aroundCell.add(cellNumber - 1);
-    aroundCell.add(cellNumber + 1);
-    if (rowAfter % 12 != 0 && rowAfter - 1 >= 0) {
+    var multiColRow = COLUMNS * ROWS;
+    if (cellNumber == 0) {
+      aroundCell.add(1);
+      aroundCell.add(COLUMNS);
+      aroundCell.add(COLUMNS + 1);
+    } else if (cellNumber == COLUMNS - 1) {
+      aroundCell.add(COLUMNS - 2);
+      aroundCell.add(COLUMNS * 2);
+      aroundCell.add(COLUMNS * 2 - 1);
+    } else if (cellNumber == multiColRow - COLUMNS) {
+      aroundCell.add(multiColRow - COLUMNS);
+      aroundCell.add(multiColRow + 1);
+      aroundCell.add(multiColRow - COLUMNS + 1);
+    } else if (cellNumber == multiColRow - 1) {
+      aroundCell.add(multiColRow - COLUMNS);
+      aroundCell.add(multiColRow - 1);
+      aroundCell.add(multiColRow - 1);
+    } else if (cellNumber % 12 == 0) {
+      aroundCell.add(rowBefore);
+      aroundCell.add(rowBefore + 1);
+      aroundCell.add(cellNumber + 1);
+      aroundCell.add(rowAfter);
+      aroundCell.add(rowAfter + 1);
+    } else if (cellNumber % 12 == 0) {
+      aroundCell.add(rowBefore);
+      aroundCell.add(rowBefore + 1);
+      aroundCell.add(cellNumber + 1);
+      aroundCell.add(rowAfter);
+      aroundCell.add(rowAfter + 1);
+    } else if (0 < cellNumber && cellNumber < COLUMNS - 1) {
+      aroundCell.add(cellNumber - 1);
+      aroundCell.add(cellNumber + 1);
+      aroundCell.add(rowAfter);
       aroundCell.add(rowAfter - 1);
+      aroundCell.add(rowAfter + 1);
+    } else if (multiColRow - COLUMNS < cellNumber &&
+        cellNumber < multiColRow - 1) {
+      aroundCell.add(cellNumber - 1);
+      aroundCell.add(cellNumber + 1);
+      aroundCell.add(rowBefore);
+      aroundCell.add(rowBefore - 1);
+      aroundCell.add(rowBefore + 1);
+    } else if ((cellNumber + 1) % 12 == 0) {
+      aroundCell.add(rowBefore);
+      aroundCell.add(rowBefore - 1);
+      aroundCell.add(cellNumber - 1);
+      aroundCell.add(rowAfter);
+      aroundCell.add(rowAfter - 1);
+    } else {
+      aroundCell.add(rowAfter - 1);
+      aroundCell.add(rowAfter);
+      aroundCell.add(rowAfter + 1);
+      aroundCell.add(cellNumber - 1);
+      aroundCell.add(cellNumber + 1);
+      aroundCell.add(rowBefore);
+      aroundCell.add(rowBefore - 1);
+      aroundCell.add(rowBefore + 1);
     }
-    aroundCell.add(rowAfter);
-    aroundCell.add(rowAfter + 1);
-    var list = new List.generate(SUM, (i) => i + 1);
-    for (var cellId in list) {
-      if (player1List.contains(cellId) || player2List.contains(cellId)) {
+
+//    var list = new List.generate(SUM, (i) => i + 1);
+    for (var cellId in aroundCell) {
+      if (player1List.contains(cellId)) {
+        aroundCell.remove(cellId);
+      }
+      if (player2List.contains(cellId)) {
         aroundCell.remove(cellId);
       }
     }
@@ -332,7 +382,7 @@ class _GameState extends State<Game> {
             FlatButton(
               child: Text('Yes'),
               onPressed: () {
-                Navigator.of(_scaffoldKey.currentContext).pop(YES);
+                Navigator.of(context).pop(YES);
 //                return MyPage(widget.player1, prefs: widget.prefs);
               },
 //          actions: <Widget>[
@@ -343,5 +393,17 @@ class _GameState extends State<Game> {
         );
       },
     );
+  }
+
+  void doFristTurn() {
+    int firstCell = ((COLUMNS * ROWS) / 2).toInt() - 1;
+    var gameItem = GameItem(
+      id: firstCell,
+      image: Image.asset('assets/images/p$activePlayer.png'),
+      enabled: false,
+    );
+//      player1List.add(gameItem.id);
+//      activePlayer = 2;
+    playGame(itemlist[firstCell], firstCell);
   }
 }
