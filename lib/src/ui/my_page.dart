@@ -309,13 +309,10 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.settings),
-                title: Text('Settings'),
+                leading: const Icon(Icons.account_circle),
+                title: Text('User\'s info'),
                 onTap: () {
-                  // Update the state of the app
-                  // ...
-                  // Then close the drawer
-                  Navigator.pop(context);
+                  Navigator.pushNamed(context, USER_INFO);
                 },
               ),
               ListTile(
@@ -338,13 +335,15 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   }
 
   void openFriendList() async {
-    FirebaseUser user = await signInWithGoogle();
-    await saveUserToFirebase(user);
-//    Navigator.of(context).pushNamed('userList');
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => UserList(
-              title: 'Friend list',
-            )));
+//    FirebaseUser user = await signInWithGoogle();
+//    await saveUserToFirebase(user);
+////    Navigator.of(context).pushNamed('userList');
+//    Navigator.of(context).pushReplacement(MaterialPageRoute(
+//        builder: (context) => UserList(
+//              title: 'Friend list',
+//            )));
+  Navigator.pushNamed(context, FRIENDS_LIST);
+
   }
 
   Future<FirebaseUser> signInWithGoogle() async {

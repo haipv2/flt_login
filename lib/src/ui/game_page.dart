@@ -50,11 +50,11 @@ class _GameState extends State<Game> {
     player1List = new List();
     player2List = new List();
     activePlayer = 1;
-
     List<GameItem> gameItems = new List();
     for (var i = 0; i < SUM; i++) {
       gameItems.add(new GameItem(id: i));
     }
+
     return gameItems;
   }
 
@@ -63,7 +63,7 @@ class _GameState extends State<Game> {
 
   @override
   Widget build(BuildContext context) {
-    Widget playerInfo = Container(
+    Widget playerInfo() => Container(
         color: Colors.orange,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -78,6 +78,7 @@ class _GameState extends State<Game> {
       key: _scaffoldKey,
       body: Container(
         decoration: BoxDecoration(color: Colors.white),
+        alignment: AlignmentDirectional.bottomEnd,
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -85,8 +86,8 @@ class _GameState extends State<Game> {
             SizedBox(
               height: 20.0,
             ),
-            playerInfo,
-            new Expanded(
+            playerInfo(),
+            Expanded(
               child: new GridView.builder(
                   gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: COLUMNS,
@@ -168,6 +169,7 @@ class _GameState extends State<Game> {
     setState(() {
       itemlist = doInit();
     });
+    doFristTurn();
   }
 
   void playGame(GameItem item, int cellNumber) {
@@ -238,7 +240,7 @@ class _GameState extends State<Game> {
     return winner;
   }
 
-  autoPlay(int cellNumber) {
+  void autoPlay(int cellNumber) {
     var rowBefore = cellNumber - COLUMNS;
     var rowAfter = cellNumber + COLUMNS;
     List aroundCell = [];
@@ -302,7 +304,8 @@ class _GameState extends State<Game> {
     }
 
 //    var list = new List.generate(SUM, (i) => i + 1);
-    for (var cellId in aroundCell) {
+    var tempList = List.from(aroundCell);
+    for (var cellId in tempList) {
       if (player1List.contains(cellId)) {
         aroundCell.remove(cellId);
       }
@@ -382,12 +385,8 @@ class _GameState extends State<Game> {
             FlatButton(
               child: Text('Yes'),
               onPressed: () {
-                Navigator.of(context).pop(YES);
-//                return MyPage(widget.player1, prefs: widget.prefs);
+                Navigator.pushNamed(context, MYPAGE);
               },
-//          actions: <Widget>[
-//            MyPage(widget.player1, prefs: widget.prefs)
-//          ],
             ),
           ],
         );
@@ -396,14 +395,12 @@ class _GameState extends State<Game> {
   }
 
   void doFristTurn() {
-    int firstCell = ((COLUMNS * ROWS) / 2).toInt() - 1;
+    int firstCell = (COLUMNS * ROWS) ~/ 2 - 1;
     var gameItem = GameItem(
       id: firstCell,
       image: Image.asset('assets/images/p$activePlayer.png'),
       enabled: false,
     );
-//      player1List.add(gameItem.id);
-//      activePlayer = 2;
     playGame(itemlist[firstCell], firstCell);
   }
 }

@@ -6,10 +6,12 @@ import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/ui/game_page.dart';
 import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flt_login/src/ui/my_page.dart';
+import 'package:flt_login/src/ui/user_info_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/common/game_enums.dart';
+import 'src/ui/user_list_page.dart';
 
 void main() {
   SharedPreferences.getInstance().then((prefs) {
@@ -20,6 +22,7 @@ void main() {
 class MyApp extends StatelessWidget {
   final SharedPreferences preferences;
   User user;
+
   MyApp(this.preferences);
 
   @override
@@ -47,6 +50,9 @@ class MyApp extends StatelessWidget {
                 user,
                 prefs: preferences,
               ),
+          USER_INFO: (BuildContext context) => UserInfo(user),
+          FRIENDS_LIST: (BuildContext context) =>
+              UserList(title: 'List your friends'),
           ARENA: (BuildContext context) => Game(
                 GameMode.single,
                 user,

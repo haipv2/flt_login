@@ -33,6 +33,8 @@ const CANCEL='cancel';
 const YES='yes';
 const MYPAGE='/mypage';
 const ARENA='/arena';
+const USER_INFO='/user_info';
+const FRIENDS_LIST='/friends_list';
 
 const GAME_TBL='games_tbl';
 const COLUMNS = 12;
