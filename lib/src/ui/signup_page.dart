@@ -220,7 +220,6 @@ class _SignUpState extends State<SignUp> {
                       fontSize: 15,
                       onPressed: (snapshot.hasData && snapshot.data == true)
                           ? () {
-                              print('all input values is valid');
                               _doRegister();
                             }
                           : null,
@@ -376,11 +375,12 @@ class _SignUpState extends State<SignUp> {
         );
         scaffoldSignupKey.currentState.showSnackBar(snackbar);
       } else {
-        print('register sucessfully');
         Navigator.push(
             context, MaterialPageRoute(builder: (context) => MyPage(user)));
       }
     });
+    print('end _doRegister');
+
   }
 
   void showErrorMsg() {

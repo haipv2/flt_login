@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/models/user.dart';
+import 'package:flt_login/src/models/user_push.dart';
 
 import '../common/common.dart';
 
@@ -11,7 +13,8 @@ class FirestoreProvider {
         .collection(USERS_TBL)
         .where("email", isEqualTo: user.email)
         .getDocuments();
-    if (result.documents.length>0){
+
+    if (result.documents.length > 0) {
       return null;
     }
     _firestore.collection(USERS_TBL).document().setData({
@@ -37,5 +40,25 @@ class FirestoreProvider {
       User user = User.fromJson(result.documents[0].data);
       return user;
     }
+  }
+
+  Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
+    var result = await FirebaseDatabase.instance
+        .reference()
+        .child(USER_PUSH_INFO)
+        .set(userPushInfo);
+    print('');
+    return result;
+  }
+
+  Future<List<String>> getListPushIdViaEmail(String email) async {
+    QuerySnapshot querySnapshot = await _firestore
+        .collection(USER_PUSH_INFO)
+        .reference()
+        .where('email', isEqualTo: email)
+        .getDocuments();
+    List<String> result = [];
+    print(querySnapshot.documents);
+    return result;
   }
 }

@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flt_login/src/models/user.dart';
+import 'package:flt_login/src/models/user_push.dart';
 import 'package:flt_login/src/resources/repository.dart';
 import 'package:flt_login/src/utils/validator_utils.dart';
 import 'package:rxdart/rxdart.dart';
 
 class SignupBloc extends Object {
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   final _repository = Repository();
   final _firstNameController = BehaviorSubject<String>();
   final _lastNameController = BehaviorSubject<String>();
@@ -77,7 +80,6 @@ class SignupBloc extends Object {
   Observable<String> get passwordStream => _userPasswordController.stream
           .transform(_validatePass)
           .doOnData((String s) {
-        print(s);
         if (0 != _confirmPasswordController.value.compareTo(s)) {
           _confirmPasswordController.sink.addError('Password does not match.');
         }
@@ -129,14 +131,22 @@ class SignupBloc extends Object {
     _genderStreamController?.close();
   }
 
-  Future<User> register() {
+  Future<User> register() async {
+
     User user = User();
     user.firstname = _firstNameController.value;
     user.lastname = _lastNameController.value;
     user.email = _userEmailController.value;
     user.password = _userPasswordController.value;
     user.gender = _genderStreamController.value == null ? 1: 0;
-    var result = _repository.registerUser(user);
+    var result = await _repository.registerUser(user);
+    print('after call register user');
+
+    var token = await firebaseMessaging.getToken();
+    print('token1');
+    UserPushInfo userPushInfo = UserPushInfo(user.email, token, '');
+    await _repository.registerUserPushInfo(userPushInfo);
+    print('token2');
     return result;
   }
 }

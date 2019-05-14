@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
               ),
           USER_INFO: (BuildContext context) => UserInfo(user),
           FRIENDS_LIST: (BuildContext context) =>
-              UserList(title: 'List your friends'),
+              UserList(user.email, title: 'List your friends',),
           ARENA: (BuildContext context) => Game(
                 GameMode.single,
                 user,
