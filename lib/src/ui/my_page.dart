@@ -370,35 +370,4 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
 
     return user;
   }
-
-  Future<void> saveUserToFirebase(FirebaseUser user) async {
-    print('saving user to firebase');
-    var token = await firebaseMessaging.getToken();
-
-    await saveUserToPreferences(user.uid, user.displayName, token);
-
-    var update = {
-      NAME: user.displayName,
-      PHOTO_URL: user.photoUrl,
-      PUSH_ID: token
-    };
-    return FirebaseDatabase.instance
-        .reference()
-        .child(USERS)
-        .child(user.uid)
-        .update(update);
-  }
-
-  saveUserToPreferences(String userId, String userName, String pushId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString(USER_ID, userId);
-    prefs.setString(PUSH_ID, pushId);
-    prefs.setString(USER_NAME, userName);
-  }
-
-  void _hideMenuAnimate() {
-    if (animataionCommonStatus == AnimataionCommonStatus.open) {
-      _controllerHide.forward();
-    }
-  }
 }

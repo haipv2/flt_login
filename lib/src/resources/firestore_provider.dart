@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/models/user.dart';
@@ -43,11 +45,11 @@ class FirestoreProvider {
   }
 
   Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
+    String userInfoStr = json.encode(userPushInfo.toJson()) ;
     var result = await FirebaseDatabase.instance
         .reference()
         .child(USER_PUSH_INFO)
-        .set(userPushInfo);
-    print('');
+        .set(userInfoStr);
     return result;
   }
 

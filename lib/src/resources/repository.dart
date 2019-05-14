@@ -8,6 +8,8 @@ class Repository {
 
   Future<User> registerUser(User user) async{
     var result = await _firestoreProvider.registerUser(user);
+    print('object');
+
     return  result;
 
   }
@@ -19,7 +21,6 @@ class Repository {
 
   Future<void>  registerUserPushInfo(UserPushInfo userPushInfo) async {
       var result = await _firestoreProvider.registerUserPushInfo(userPushInfo);
-      print('');
       return result;
 
   }

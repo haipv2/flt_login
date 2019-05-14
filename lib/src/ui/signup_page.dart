@@ -365,7 +365,7 @@ class _SignUpState extends State<SignUp> {
     print('BEGIN: google login');
   }
 
-  void _doRegister() {
+  void _doRegister()async {
     _signUpBloc.showProgressBar(true);
     _signUpBloc.register().then((user) {
       if (user == null) {
@@ -379,6 +379,8 @@ class _SignUpState extends State<SignUp> {
             context, MaterialPageRoute(builder: (context) => MyPage(user)));
       }
     });
+
+
     print('end _doRegister');
 
   }
