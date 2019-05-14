@@ -8,9 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'my_page.dart';
 
 class SignUp extends StatefulWidget {
-  SharedPreferences prefs;
 
-  SignUp(this.prefs);
+  SignUp();
 
   @override
   _SignUpState createState() => _SignUpState();
@@ -309,7 +308,7 @@ class _SignUpState extends State<SignUp> {
               Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Loginpage(widget.prefs)));
+                      builder: (context) => Loginpage()));
             },
           )),
       body: SingleChildScrollView(

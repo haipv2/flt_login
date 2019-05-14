@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String userJson = preferences.getString('user');
+    String userJson = preferences.getString(USER_PREFS_KEY);
 
     if (userJson != null && userJson.isNotEmpty) {
       Map userMap = jsonDecode(userJson);
@@ -38,21 +38,14 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Demo app',
-        home: Scaffold(
-            body: user == null
-                ? Loginpage(preferences)
-                : MyPage(
-                    user,
-                    prefs: preferences,
-                  )),
+        home: Scaffold(body: user == null ? Loginpage() : MyPage(user)),
         routes: <String, WidgetBuilder>{
-          MYPAGE: (BuildContext context) => MyPage(
-                user,
-                prefs: preferences,
-              ),
+          MYPAGE: (BuildContext context) => MyPage(user),
           USER_INFO: (BuildContext context) => UserInfo(user),
-          FRIENDS_LIST: (BuildContext context) =>
-              UserList(user.email, title: 'List your friends',),
+          FRIENDS_LIST: (BuildContext context) => UserList(
+                user.email,
+                title: 'List your friends',
+              ),
           ARENA: (BuildContext context) => Game(
                 GameMode.single,
                 user,
@@ -60,7 +53,6 @@ class MyApp extends StatelessWidget {
                   ..firstname = 'AI'
                   ..userId = 'AI id'
                   ..name = 'AI name',
-                prefs: preferences,
               ),
         },
       ),

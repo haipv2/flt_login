@@ -41,3 +41,4 @@ const ROWS = 13;
 const SUM = COLUMNS * ROWS;
 const WIN_POINT = 5;
 const SURRENDER_FLAG = 'assets/images/surrender.gif';
+const USER_PREFS_KEY='userKey';

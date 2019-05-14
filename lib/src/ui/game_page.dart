@@ -13,14 +13,13 @@ import 'game_dialog.dart';
 import 'game_item.dart';
 
 class Game extends StatefulWidget {
-  final SharedPreferences prefs;
   FirebaseUser firebaseUser;
   User player1;
   GameMode gameMode;
 
   User player2;
 
-  Game(this.gameMode, this.player1, this.player2, {this.prefs});
+  Game(this.gameMode, this.player1, this.player2);
 
   @override
   _GameState createState() => _GameState();

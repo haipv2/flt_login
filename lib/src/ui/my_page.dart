@@ -10,6 +10,7 @@ import 'package:flt_login/src/ui/game_page.dart';
 import 'package:flt_login/src/ui/login_page.dart';
 import 'package:flt_login/src/ui/user_list_page.dart';
 import 'package:flt_login/src/utils/map_utils.dart';
+import 'package:flt_login/src/utils/shared_preferences_utils.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -20,9 +21,9 @@ import '../common/game_enums.dart';
 
 class MyPage extends StatefulWidget {
   final User user;
-  SharedPreferences prefs;
 
-  MyPage(this.user, {this.prefs});
+  MyPage(this.user){
+  }
 
   @override
   _MyPageState createState() => _MyPageState();
@@ -102,7 +103,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 GameMode.friends,
                 null,
                 null,
-                prefs: widget.prefs,
               )));
     } else if (type == 'reject') {}
   }
@@ -157,7 +157,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
               GameMode.friends,
               null,
               null,
-              prefs: widget.prefs,
             )));
   }
 
@@ -169,8 +168,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
       var token = await firebaseMessaging.getToken();
       print(token);
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString(PUSH_ID, token);
+      SharedPreferencesUtils.setStringToPreferens(PUSH_ID, token);
 
       FirebaseDatabase.instance
           .reference()
@@ -319,13 +317,10 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 leading: const Icon(Icons.exit_to_app),
                 title: Text('Logout'),
                 onTap: () {
-                  // Update the state of the app
-                  // ...
-                  // Then close the drawer
                   Navigator.of(context)
                       .pushReplacement(MaterialPageRoute(builder: (context) {
-                    if (widget.prefs != null) widget.prefs.remove('user');
-                    return Loginpage(widget.prefs);
+                        removeUserInfo();
+                    return Loginpage();
                   }));
                 },
               ),
@@ -369,5 +364,11 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
     }
 
     return user;
+  }
+
+  void removeUserInfo() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(USER_PREFS_KEY);
+
   }
 }

@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/models/user_push.dart';
 import 'package:flt_login/src/resources/repository.dart';
+import 'package:flt_login/src/utils/shared_preferences_utils.dart';
 import 'package:flt_login/src/utils/validator_utils.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,15 +147,10 @@ class SignupBloc extends Object {
     var pushId = await firebaseMessaging.getToken();
     UserPushInfo userPushInfo = UserPushInfo(user.email, pushId);
     await _repository.registerUserPushInfo(userPushInfo);
-    await saveToPreferences(user.email,user.firstname,pushId);
+    SharedPreferencesUtils.saveUserToPreferences(user);
+    SharedPreferencesUtils.setStringToPreferens(PUSH_ID, pushId);
 
     return result;
   }
 
-  saveToPreferences(String email, String firstname, String pushId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('email', email);
-    prefs.setString('push_id', pushId);
-    prefs.setString('first_name', firstname);
-  }
 }

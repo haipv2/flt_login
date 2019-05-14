@@ -1,21 +1,13 @@
-import 'dart:convert';
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/blocs/login_bloc.dart';
 import 'package:flt_login/src/blocs/login_bloc_provider.dart';
-import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/ui/signup_page.dart';
+import 'package:flt_login/src/utils/shared_preferences_utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'my_page.dart';
 
 class Loginpage extends StatefulWidget {
-  SharedPreferences prefs;
-
-  Loginpage(this.prefs);
-
   @override
   _LoginpageState createState() => _LoginpageState();
 }
@@ -105,7 +97,7 @@ class _LoginpageState extends State<Loginpage> {
             }
           },
         );
-    Widget registerUser(SharedPreferences prefs) => Container(
+    Widget registerUser() => Container(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -118,7 +110,7 @@ class _LoginpageState extends State<Loginpage> {
                       TextSpan(
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            signUpUser(prefs);
+                            signUpUser();
                           },
                         text: 'Sign up',
                         style: TextStyle(
@@ -163,7 +155,7 @@ class _LoginpageState extends State<Loginpage> {
             ),
             loginButton(context),
             Container(margin: EdgeInsets.fromLTRB(10, 20, 10, 0)),
-            registerUser(widget.prefs),
+            registerUser(),
           ],
         ),
       ),
@@ -174,14 +166,15 @@ class _LoginpageState extends State<Loginpage> {
     print('press forget password');
   }
 
-  void signUpUser(SharedPreferences prefs) async {
+  void signUpUser() {
     print('signup user');
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => SignUp(prefs)));
+        context, MaterialPageRoute(builder: (context) => SignUp()));
   }
 
   void _authenticate(context) {
-    if(emailController.value.text.isEmpty && passController.value.text.isEmpty){
+    if (emailController.value.text.isEmpty &&
+        passController.value.text.isEmpty) {
       SnackBar snackbar = SnackBar(
         content: Text('Enter correctly email and password'),
         duration: Duration(seconds: 3),
@@ -198,11 +191,12 @@ class _LoginpageState extends State<Loginpage> {
         Scaffold.of(context).showSnackBar(snackbar);
       } else {
         _bloc.doLoginStream(true);
-        widget.prefs.setString('user', jsonEncode(user));
+        SharedPreferencesUtils.saveUserToPreferences(user);
+
         Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MyPage(user, prefs: widget.prefs,)));
+            context, MaterialPageRoute(builder: (context) => MyPage(user)));
       }
-    }).catchError((error){
+    }).catchError((error) {
       SnackBar snackbar = SnackBar(
         content: Text(error),
         duration: Duration(seconds: 3),
@@ -222,7 +216,6 @@ class _LoginpageState extends State<Loginpage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onPressed: () {
         _authenticate(context);
-        print('object');
       },
     );
   }
