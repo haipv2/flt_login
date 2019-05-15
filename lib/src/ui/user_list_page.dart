@@ -114,20 +114,20 @@ class _UserListState extends State<UserList> {
 
   challenge(User user) async {
 
-    var userVar = SharedPreferencesUtils.getUserFromPreferences();
+//    var userVar = SharedPreferencesUtils.getUserFromPreferences();
 //    User user = userVar as User;
-    var pushId = SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
+    var pushId = await SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
 
-    List pushIds = await _userPushBloc.getListPushIdViaEmail(user.email);
+    List<String> pushIds =await _userPushBloc.getListPushIdViaEmail(user.email);
 
     var username = user.firstname;
 //    var pushId = prefs.getString(PUSH_ID);
     var email = user.email;
     var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
 
-    String dataURL =
-        '$base/sendNotification2?to=${user.pushId}&fromPushId=$pushId&fromId=$email&fromName=$username&type=invite';
     pushIds.forEach((item) {
+      String dataURL =
+          '$base/sendNotification2?to=${item}&fromPushId=$pushId&fromId=$email&fromName=$username&type=invite';
       print(dataURL);
       String gameId = '$email-${user.userId}';
       FirebaseDatabase.instance

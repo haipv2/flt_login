@@ -365,7 +365,6 @@ class _SignUpState extends State<SignUp> {
   }
 
   void _doRegister()async {
-    _signUpBloc.showProgressBar(true);
     _signUpBloc.register().then((user) {
       if (user == null) {
         SnackBar snackbar = SnackBar(

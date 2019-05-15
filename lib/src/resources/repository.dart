@@ -8,8 +8,6 @@ class Repository {
 
   Future<User> registerUser(User user) async {
     var result = await _firestoreProvider.registerUser(user);
-    print('object');
-
     return result;
   }
 
@@ -23,9 +21,8 @@ class Repository {
     return result;
   }
 
-//  Future<List<String>> getListPushIdViaEmail(String email) async{
-  getListPushIdViaEmail(String email) {
-    var result = _firestoreProvider.getListPushIdViaEmail(email);
+  Future<List<String>> getListPushIdViaEmail(String email) async{
+    var result =await _firestoreProvider.getListPushIdViaEmail(email);
     print('');
     return result;
   }

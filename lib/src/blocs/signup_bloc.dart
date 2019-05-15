@@ -19,7 +19,6 @@ class SignupBloc extends Object {
   final _userPasswordController = BehaviorSubject<String>();
   final _confirmPasswordController = BehaviorSubject<String>();
   final _genderStreamController = BehaviorSubject<int>();
-  final _progressBarController = BehaviorSubject<bool>();
   final _resetFormStreamController = PublishSubject();
   final _backStreamController = BehaviorSubject();
 
@@ -98,7 +97,6 @@ class SignupBloc extends Object {
         }
       });
 
-  Observable<bool> get progressBarStream => _progressBarController.stream;
 
   //change data
   Function(String) get changeFirstName => _firstNameController.sink.add;
@@ -112,8 +110,6 @@ class SignupBloc extends Object {
   Function(String) get changePassConfirm => _confirmPasswordController.sink.add;
 
   Function(int) get changeGenderStream => _genderStreamController.sink.add;
-
-  Function(bool) get showProgressBar => _progressBarController.sink.add;
 
   //register button
   Stream<bool> get registerStream => Observable.combineLatest5(
