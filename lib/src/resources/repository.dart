@@ -6,26 +6,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Repository {
   final _firestoreProvider = FirestoreProvider();
 
-  Future<User> registerUser(User user) async{
+  Future<User> registerUser(User user) async {
     var result = await _firestoreProvider.registerUser(user);
     print('object');
 
-    return  result;
-
-  }
-
-  Future<User> authenticateUser(String email, String password) async{
-    var result = _firestoreProvider.authenticateUser(email,password);
     return result;
   }
 
-  Future<void>  registerUserPushInfo(UserPushInfo userPushInfo) async {
-      var result = await _firestoreProvider.registerUserPushInfo(userPushInfo);
-      return result;
-
+  Future<User> authenticateUser(String email, String password) async {
+    var result = _firestoreProvider.authenticateUser(email, password);
+    return result;
   }
 
-  Future<List<String>> getListPushIdViaEmail(String email) {
-    return _firestoreProvider.getListPushIdViaEmail(email);
+  Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
+    var result = await _firestoreProvider.registerUserPushInfo(userPushInfo);
+    return result;
+  }
+
+//  Future<List<String>> getListPushIdViaEmail(String email) async{
+  getListPushIdViaEmail(String email) {
+    var result = _firestoreProvider.getListPushIdViaEmail(email);
+    print('');
+    return result;
   }
 }

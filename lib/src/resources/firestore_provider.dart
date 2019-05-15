@@ -8,18 +8,12 @@ import 'package:flt_login/src/models/user_push.dart';
 import '../common/common.dart';
 
 class FirestoreProvider {
-  Firestore _firestore = Firestore.instance;
+//  Firestore _firestore = Firestore.instance;
+  FirebaseDatabase _firebaseDatabase = FirebaseDatabase.instance;
 
   Future<User> registerUser(User user) async {
-    QuerySnapshot result = await _firestore
-        .collection(USERS_TBL)
-        .where("email", isEqualTo: user.email)
-        .getDocuments();
-
-    if (result.documents.length > 0) {
-      return null;
-    }
-    _firestore.collection(USERS_TBL).document().setData({
+    DatabaseReference child = _firebaseDatabase.reference().child(USERS_TBL);
+    await child.push().set({
       'email': user.email,
       'first_name': user.firstname,
       'last_name': user.lastname,
@@ -31,36 +25,47 @@ class FirestoreProvider {
   }
 
   Future<User> authenticateUser(String email, String password) async {
-    QuerySnapshot result = await _firestore
-        .collection(USERS_TBL)
-        .where("email", isEqualTo: email)
-        .where("password", isEqualTo: password)
-        .getDocuments();
-    if (result.documents.length == 0) {
-      return null;
-    } else {
-      User user = User.fromJson(result.documents[0].data);
-      return user;
-    }
+    DatabaseReference child = _firebaseDatabase.reference().child(USERS_TBL);
+    DataSnapshot snapshot = await child.once();
+    User user;
+
+    Map<String, String> users = snapshot.value.cast<String, String>();
+
+    users.forEach((key, userMap) {
+//      userMap.
+    });
+    return user;
   }
 
   Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
-    String userInfoStr = json.encode(userPushInfo.toJson()) ;
+    String userInfoStr = json.encode(userPushInfo.toJson());
     var result = await FirebaseDatabase.instance
         .reference()
         .child(USER_PUSH_INFO)
-        .set(userInfoStr);
+        .push()
+        .set({'email': userPushInfo.email, 'push_id': userPushInfo.pushId});
     return result;
   }
 
-  Future<List<String>> getListPushIdViaEmail(String email) async {
-    QuerySnapshot querySnapshot = await _firestore
-        .collection(USER_PUSH_INFO)
-        .reference()
-        .where('email', isEqualTo: email)
-        .getDocuments();
+  Future<List<String>> getListPushIdViaEmail(String originEmail) async {
+    DataSnapshot snapshot =
+        await _firebaseDatabase.reference().child(USER_PUSH_INFO).once();
+    Map<String, String> users = snapshot.value.cast<String, String>();
     List<String> result = [];
-    print(querySnapshot.documents);
+    users.forEach((key, userMap) {
+//      print('KEY:======================= $key');
+      var pushId = getPushId(originEmail, userMap);
+      if (pushId != null) result.add(pushId);
+    });
+//    print(querySnapshot.documents);
     return result;
+  }
+
+  String getPushId(String email, String userMap) {
+    UserPushInfo userPushInfo = UserPushInfo.fromJson(jsonDecode(userMap));
+    if (userPushInfo.email == email) {
+      return userPushInfo.pushId;
+    }
+    return null;
   }
 }

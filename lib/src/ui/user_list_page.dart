@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/blocs/user_push_bloc.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
+import 'package:flt_login/src/utils/shared_preferences_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -99,7 +100,7 @@ class _UserListState extends State<UserList> {
           lastname = value as String;
         }
         if (key == 'gender') {
-          gender = value as int;
+          gender = int.parse(value);
         }
       });
 
@@ -112,19 +113,23 @@ class _UserListState extends State<UserList> {
   }
 
   challenge(User user) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    var userVar = SharedPreferencesUtils.getUserFromPreferences();
+//    User user = userVar as User;
+    var pushId = SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
+
     List pushIds = await _userPushBloc.getListPushIdViaEmail(user.email);
 
-    var username = prefs.getString(USER_NAME);
-    var pushId = prefs.getString(PUSH_ID);
-    var userId = prefs.getString(USER_ID);
+    var username = user.firstname;
+//    var pushId = prefs.getString(PUSH_ID);
+    var email = user.email;
     var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
 
     String dataURL =
-        '$base/sendNotification2?to=${user.pushId}&fromPushId=$pushId&fromId=$userId&fromName=$username&type=invite';
+        '$base/sendNotification2?to=${user.pushId}&fromPushId=$pushId&fromId=$email&fromName=$username&type=invite';
     pushIds.forEach((item) {
       print(dataURL);
-      String gameId = '$userId-${user.userId}';
+      String gameId = '$email-${user.userId}';
       FirebaseDatabase.instance
           .reference()
           .child(GAME_TBL)

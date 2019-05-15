@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/common/game_enums.dart';
 import 'src/ui/user_list_page.dart';
+import 'src/utils/shared_preferences_utils.dart';
 
 void main() {
   SharedPreferences.getInstance().then((prefs) {
@@ -46,16 +47,19 @@ class MyApp extends StatelessWidget {
                 user.email,
                 title: 'List your friends',
               ),
-          ARENA: (BuildContext context) => Game(
-                GameMode.single,
-                user,
-                User()
-                  ..firstname = 'AI'
-                  ..userId = 'AI id'
-                  ..name = 'AI name',
-              ),
+          ARENA: (BuildContext context) {
+            return Game(
+              GameMode.single,
+              user,
+              User()
+                ..firstname = 'AI'
+                ..userId = 'AI id'
+                ..name = 'AI name',
+            );
+          }
         },
       ),
     );
   }
+
 }
