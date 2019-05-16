@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
           MYPAGE: (BuildContext context) => MyPage(user),
           USER_INFO: (BuildContext context) => UserInfo(user),
           FRIENDS_LIST: (BuildContext context) => UserList(
-                user.email,
+                user,
                 title: 'List your friends',
               ),
           ARENA: (BuildContext context) {
@@ -53,13 +53,12 @@ class MyApp extends StatelessWidget {
               user,
               User()
                 ..firstname = 'AI'
-                ..userId = 'AI id'
-                ..name = 'AI name',
+                ..loginId = 'AI id'
+                ..email = 'abcd@gmail.com',
             );
           }
         },
       ),
     );
   }
-
 }

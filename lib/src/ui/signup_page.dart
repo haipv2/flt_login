@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'my_page.dart';
 
 class SignUp extends StatefulWidget {
-
   SignUp();
 
   @override
@@ -21,6 +20,7 @@ class _SignUpState extends State<SignUp> {
   TextEditingController passwordController = new TextEditingController();
   TextEditingController passwordConfirmController = new TextEditingController();
   TextEditingController emailController = new TextEditingController();
+  TextEditingController loginTextController = new TextEditingController();
   SignupBloc _signUpBloc;
 
   @override
@@ -118,7 +118,7 @@ class _SignUpState extends State<SignUp> {
             controller: passwordController,
             onChanged: _signUpBloc.changePass,
             decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: 'Pasword',
                 hintText: 'Enter your password.',
                 errorText: snapshot.error,
                 border: OutlineInputBorder(
@@ -235,24 +235,20 @@ class _SignUpState extends State<SignUp> {
                     ),
                   ),
             ),
-            StreamBuilder(
-                stream: _signUpBloc.resetFormStream,
-                builder: (context, snapshot) {
-                  return CustomFlatButton(
-                    title: "Reset",
-                    fontSize: 15,
-                    fontWeight: FontWeight.w100,
-                    textColor: Colors.white,
-                    onPressed: () {
-                      resetSignupForm();
+            CustomFlatButton(
+              title: "Reset",
+              fontSize: 15,
+              fontWeight: FontWeight.w100,
+              textColor: Colors.white,
+              onPressed: () {
+                resetSignupForm();
 //                      _signUpBloc.registerStream;
-                    },
-                    splashColor: Colors.black12,
-                    borderColor: Colors.grey,
-                    borderWidth: 0,
-                    color: Colors.grey,
-                  );
-                }),
+              },
+              splashColor: Colors.black12,
+              borderColor: Colors.grey,
+              borderWidth: 0,
+              color: Colors.grey,
+            ),
           ],
         );
 
@@ -305,10 +301,8 @@ class _SignUpState extends State<SignUp> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Loginpage()));
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => Loginpage()));
             },
           )),
       body: SingleChildScrollView(
@@ -326,6 +320,10 @@ class _SignUpState extends State<SignUp> {
               margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
             ),
             lastName,
+            Container(
+              margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
+            ),
+            loginId(),
             Container(
               margin: EdgeInsets.only(top: 5.0, bottom: 5.0),
             ),
@@ -364,7 +362,7 @@ class _SignUpState extends State<SignUp> {
     print('BEGIN: google login');
   }
 
-  void _doRegister()async {
+  void _doRegister() async {
     _signUpBloc.register().then((user) {
       if (user == null) {
         SnackBar snackbar = SnackBar(
@@ -378,9 +376,7 @@ class _SignUpState extends State<SignUp> {
       }
     });
 
-
     print('end _doRegister');
-
   }
 
   void showErrorMsg() {
@@ -395,5 +391,26 @@ class _SignUpState extends State<SignUp> {
     emailController.clear();
     passwordConfirmController.clear();
     passwordController.clear();
+    loginTextController.clear();
   }
+
+  Widget loginId() => StreamBuilder(
+      stream: _signUpBloc.loginStream,
+      builder: (context, snapshot) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child: TextField(
+            onChanged: _signUpBloc.changeLoginStream,
+            autofocus: false,
+            controller: loginTextController,
+            decoration: InputDecoration(
+                labelText: 'Login',
+                hintText: 'Login Id is used to play.',
+                errorText: snapshot.error,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(5)),
+                    borderSide: BorderSide(color: Colors.grey, width: 1))),
+          ),
+        );
+      });
 }

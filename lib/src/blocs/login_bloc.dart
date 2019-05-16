@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LoginBloc {
   final _repository = Repository();
   Future<SharedPreferences> prefs = SharedPreferences.getInstance();
-  final _userEmailController = BehaviorSubject<String>();
+  final _loginIdController = BehaviorSubject<String>();
   final _userPasswordController = BehaviorSubject<String>();
   final _loginStreamController = PublishSubject<bool>();
   final _imageStreamLoginController = BehaviorSubject<String>();
@@ -22,12 +22,13 @@ class LoginBloc {
     }
   });
 
-  StreamTransformer<String, String> _validateEmail =
-      StreamTransformer<String, String>.fromHandlers(handleData: (email, sink) {
-    if (!ValidatorUtils.validEmail(email)) {
+  StreamTransformer<String, String> _validateLoginId =
+      StreamTransformer<String, String>.fromHandlers(
+          handleData: (loginId, sink) {
+    if (!ValidatorUtils.checkLength(loginId, 10, 3)) {
       sink.addError('Email is invalid.');
     } else {
-      sink.add(email);
+      sink.add(loginId);
     }
   });
 
@@ -42,8 +43,8 @@ class LoginBloc {
   });
 
   void dispose() async {
-    await _userEmailController.drain();
-    _userEmailController?.close();
+    await _loginIdController.drain();
+    _loginIdController?.close();
     await _userPasswordController.drain();
     _userPasswordController?.close();
     await _loginStreamController.drain();
@@ -55,8 +56,8 @@ class LoginBloc {
   //Stream
   Observable<String> get imageStream => _imageStreamLoginController.stream;
 
-  Observable<String> get emailStream =>
-      _userEmailController.stream.transform(_validateEmail);
+  Observable<String> get loginIdStream =>
+      _loginIdController.stream.transform(_validateLoginId);
 
   Observable<String> get passwordStream =>
       _userPasswordController.stream.transform(_validPassword);
@@ -68,13 +69,13 @@ class LoginBloc {
   Function(bool) get doLoginStream => _loginStreamController.sink.add;
 
   //add input
-  Function(String) get emailStreamChange => _userEmailController.sink.add;
+  Function(String) get loginIdStreamChange => _loginIdController.sink.add;
 
   Function(String) get passwordStreamChange => _userPasswordController.sink.add;
 
   Future<User> authenticateUser() {
-    var email = _userEmailController.value;
+    var loginId = _loginIdController.value;
     var password = _userPasswordController.value;
-    return _repository.authenticateUser(email, password);
+    return _repository.authenticateUser(loginId, password);
   }
 }

@@ -1,32 +1,33 @@
-
+const USER_PUSH_LOGIN_ID='loginId';
+const USER_PUSH_PUSH_ID='pushId';
 
 class UserPushInfo {
-  String _email;
-  String _pushId;
+  String _loginId;
+  List<String> _pushIds;
 
-  UserPushInfo(this._email, this._pushId);
+  UserPushInfo(this._loginId, this._pushIds);
 
-  Map<String,dynamic> toJson() => {
-    'email':email,
-    'push_id':pushId,
-  };
+  Map<String, dynamic> toJson() => {
+        USER_PUSH_LOGIN_ID: loginId,
+        USER_PUSH_PUSH_ID: pushIds,
+      };
 
-  UserPushInfo.fromJson(Map<String,dynamic> map){
-    email=map['email'];
-    pushId=map['pushId'];
+  UserPushInfo.fromJson(Map<String, dynamic> map) {
+    loginId = map[USER_PUSH_LOGIN_ID];
+    pushIds = map[USER_PUSH_PUSH_ID];
   }
 
-  String get pushId => _pushId;
 
-  set pushId(String value) {
-    _pushId = value;
+  List<String> get pushIds => _pushIds;
+
+  set pushIds(List<String> value) {
+    _pushIds = value;
   }
 
-  String get email => _email;
+  String get loginId => _loginId;
 
-  set email(String value) {
-    _email = value;
+  set loginId(String value) {
+    _loginId = value;
   }
-
 
 }

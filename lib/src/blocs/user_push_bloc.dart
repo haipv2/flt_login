@@ -5,7 +5,6 @@ class UserPushBloc {
 
   Future<List<String>> getListPushIdViaEmail(String email) async{
     var result = await _repository.getListPushIdViaEmail(email);
-    print('repository print');
 
     return result;
   }

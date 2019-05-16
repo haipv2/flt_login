@@ -9,9 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UserList extends StatefulWidget {
   final String title;
-  final String currentEmail;
+  User currentUser;
 
-  UserList(this.currentEmail, {Key key, this.title}) : super(key: key);
+  UserList(this.currentUser, {Key key, this.title}) : super(key: key);
 
   @override
   _UserListState createState() => _UserListState();
@@ -23,7 +23,7 @@ class _UserListState extends State<UserList> {
 
   @override
   void initState() {
-    fetchUsers(widget.currentEmail);
+    fetchUsers(widget.currentUser.email);
     _userPushBloc = new UserPushBloc();
     super.initState();
   }
@@ -62,8 +62,8 @@ class _UserListState extends State<UserList> {
         await FirebaseDatabase.instance.reference().child(USERS).once();
 
     Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
-    users.forEach((userId, userMap) {
-      User user = parseUser(userId, userMap, currentEmail);
+    users.forEach((loginId, userMap) {
+      User user = parseUser(loginId, userMap, currentEmail);
       if (user != null) {
         setState(() {
           _users.add(user);
@@ -73,38 +73,29 @@ class _UserListState extends State<UserList> {
   }
 
   User parseUser(
-      String userId, Map<dynamic, dynamic> user, String currentEmail) {
-    String name, photoUrl, pushId, email, firstname, lastname;
+      String loginId, Map<dynamic, dynamic> user, String currentEmail) {
+    String firstname, pushId, email, lastname;
     int gender;
-    String emailFromDb = user['email'];
+    String emailFromDb = user[USER_EMAIL];
     if (emailFromDb == currentEmail) {
       return null;
     } else {
       user.forEach((key, value) {
-        if (key == 'email') {
+        if (key == USER_EMAIL) {
           email = value as String;
         }
-        if (key == NAME) {
-          name = value as String;
-        }
-        if (key == PHOTO_URL) {
-          photoUrl = value as String;
-        }
-        if (key == PUSH_ID) {
-          pushId = value as String;
-        }
-        if (key == 'first_name') {
+        if (key == USER_FIRST_NAME) {
           firstname = value as String;
         }
-        if (key == 'last_name') {
+        if (key == USER_LAST_NAME) {
           lastname = value as String;
         }
-        if (key == 'gender') {
+        if (key == USER_GENDER) {
           gender = int.parse(value);
         }
       });
 
-      return User.userForPush(userId, name, photoUrl, pushId)
+      return User()
         ..firstname = firstname
         ..lastname = lastname
         ..email = email
@@ -113,23 +104,19 @@ class _UserListState extends State<UserList> {
   }
 
   challenge(User user) async {
-
-//    var userVar = SharedPreferencesUtils.getUserFromPreferences();
-//    User user = userVar as User;
     var pushId = await SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
 
-    List<String> pushIds =await _userPushBloc.getListPushIdViaEmail(user.email);
+    List<String> pushIds =
+        await _userPushBloc.getListPushIdViaEmail(user.email);
 
     var username = user.firstname;
-//    var pushId = prefs.getString(PUSH_ID);
-    var email = user.email;
     var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
 
     pushIds.forEach((item) {
       String dataURL =
-          '$base/sendNotification2?to=${item}&fromPushId=$pushId&fromId=$email&fromName=$username&type=invite';
+          '$base/sendNotification2?to=${item}&fromPushId=$pushId&fromId=${widget.currentUser.email}&fromName=${widget.currentUser.firstname}&type=invite';
       print(dataURL);
-      String gameId = '$email-${user.userId}';
+      String gameId = '${widget.currentUser.firstname}-${username}';
       FirebaseDatabase.instance
           .reference()
           .child(GAME_TBL)

@@ -19,15 +19,23 @@ class SignupBloc extends Object {
   final _userPasswordController = BehaviorSubject<String>();
   final _confirmPasswordController = BehaviorSubject<String>();
   final _genderStreamController = BehaviorSubject<int>();
-  final _resetFormStreamController = PublishSubject();
-  final _backStreamController = BehaviorSubject();
-
-  Observable get backStream => _backStreamController.stream;
-  Function(void) get doBackStream => _backStreamController.sink.add;
+//  final _resetFormStreamController = PublishSubject();
+  final _loginStreamController = BehaviorSubject<String>();
 
   String get email => _userEmailController.value;
 
-  Observable get resetFormStream => _resetFormStreamController.stream;
+  Observable<String> get loginStream => _loginStreamController.stream.transform(_validateLoginId);
+  Function(String) get changeLoginStream => _loginStreamController.sink.add;
+
+  final _validateLoginId =
+      StreamTransformer<String,String>.fromHandlers(handleData: (loginId,sink){
+  if (!ValidatorUtils.validString(loginId) ||
+  !ValidatorUtils.checkLength(loginId, 10, 3)) {
+  sink.addError('This is required and contain from 3-10 characters.');
+  } else {
+  sink.add(loginId);
+  }
+  });
 
   final _validateName =
       StreamTransformer<String, String>.fromHandlers(handleData: (name, sink) {
@@ -112,13 +120,14 @@ class SignupBloc extends Object {
   Function(int) get changeGenderStream => _genderStreamController.sink.add;
 
   //register button
-  Stream<bool> get registerStream => Observable.combineLatest5(
+  Stream<bool> get registerStream => Observable.combineLatest6(
       firstNameStream,
       lastNameStream,
       userEmailStream,
+      loginStream,
       passwordStream,
       passwordConfirmStream,
-      (firstName, lastname, email, pass, confirmPass) => true);
+      (firstName, lastname, email, login, pass, confirmPass) => true);
 
   void dispose() async {
     await _firstNameController.drain();
@@ -128,6 +137,7 @@ class SignupBloc extends Object {
     _userPasswordController?.close();
     _userEmailController?.close();
     _genderStreamController?.close();
+    _loginStreamController?.close();
   }
 
   Future<User> register() async {
@@ -138,10 +148,12 @@ class SignupBloc extends Object {
     user.email = _userEmailController.value;
     user.password = _userPasswordController.value;
     user.gender = _genderStreamController.value == null ? 1: 0;
+    user.loginId=_loginStreamController.value;
     var result = await _repository.registerUser(user);
 
     var pushId = await firebaseMessaging.getToken();
-    UserPushInfo userPushInfo = UserPushInfo(user.email, pushId);
+
+    UserPushInfo userPushInfo = UserPushInfo(user.email, [pushId]);
     await _repository.registerUserPushInfo(userPushInfo);
     SharedPreferencesUtils.saveUserToPreferences(user);
     SharedPreferencesUtils.setStringToPreferens(PUSH_ID, pushId);

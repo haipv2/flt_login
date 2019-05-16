@@ -12,27 +12,28 @@ class FirestoreProvider {
 
   Future<User> registerUser(User user) async {
     DatabaseReference child = _firebaseDatabase.reference().child(USERS_TBL);
-    await child.push().set(<String, String>{
-      'email': user.email,
-      'first_name': user.firstname,
-      'last_name': user.lastname,
-      'password': user.password,
-      'gender': user.gender.toString(),
-      'user_role': user.role ?? 'USER'
+    await child.child(user.loginId).set(<String, String>{
+      USER_EMAIL: user.email,
+      USER_FIRST_NAME: user.firstname,
+      USER_LAST_NAME: user.lastname,
+      USER_PASSWORD: user.password,
+      USER_GENDER: user.gender.toString(),
+      USER_ROLE: user.role ?? 'USER'
     });
     return user;
   }
 
-  Future<User> authenticateUser(String email, String password) async {
+  Future<User> authenticateUser(String loginId, String password) async {
     DatabaseReference child = _firebaseDatabase.reference().child(USERS_TBL);
     DataSnapshot snapshot = await child.once();
-    User user;
     Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
+    User result;
     users.forEach((key, userMap) {
-      getUserByEmailPassword(email, password, userMap);
+      if (key == loginId)
+        result = getUserByLoginAndPassword(loginId, password, userMap);
     });
 
-    return user;
+    return result;
   }
 
   Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
@@ -41,53 +42,65 @@ class FirestoreProvider {
         .reference()
         .child(USER_PUSH_INFO)
         .push()
-        .set({'email': userPushInfo.email, 'push_id': userPushInfo.pushId});
+        .set({
+      USER_PUSH_LOGIN_ID: userPushInfo.loginId,
+      USER_PUSH_PUSH_ID: userPushInfo.pushIds
+    });
     return result;
   }
 
-  Future<List<String>> getListPushIdViaEmail(String originEmail) async {
+  Future<List<String>> getListPushIdViaEmail(String friendsEmail) async {
     DataSnapshot snapshot =
         await _firebaseDatabase.reference().child(USER_PUSH_INFO).once();
     Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
     List<String> result = [];
     users.forEach((key, userMap) {
 //      print('KEY:======================= $key');
-      var pushId = getPushId(originEmail, userMap);
+      var pushId = getPushId(friendsEmail, userMap);
       if (pushId != null) result.add(pushId);
     });
 //    print(querySnapshot.documents);
     return result;
   }
 
-  String getPushId(String email, Map<dynamic,dynamic> userMap) {
+  String getPushId(String friendsEmail, Map<dynamic, dynamic> userMap) {
     String pushId;
-    userMap.forEach((key,value){
-      if (key=='push_id') {
+    String email;
+    userMap.forEach((key, value) {
+      if (key == 'push_id') {
         pushId = value.toString();
       }
+      if (key == USER_EMAIL) {
+        email = value.toString();
+      }
     });
-    return pushId;
+    if (email == friendsEmail) {
+      return pushId;
+    } else {
+      return null;
+    }
   }
 
-  User getUserByEmailPassword(
-      String emailInput, String passwordInput, Map<String, String> userMap) {
+  User getUserByLoginAndPassword(String loginIdInput, String passwordInput,
+      Map<dynamic, dynamic> userMap) {
     String email, password, firstName, lastName;
     int gender;
     userMap.forEach((key, value) {
-      if (key == 'email') {
+      if (key == USER_EMAIL) {
         email = value.toString();
-      } else if (key == 'password') {
+      } else if (key == USER_PASSWORD) {
         password = value.toString();
-      } else if (key == 'first_name') {
+      } else if (key == USER_FIRST_NAME) {
         firstName = value.toString();
-      } else if (key == 'last_name') {
+      } else if (key == USER_LAST_NAME) {
         lastName = value.toString();
-      } else if (key == 'gender') {
+      } else if (key == USER_GENDER) {
         gender = int.parse(value);
       }
     });
-    if (email == emailInput && password == passwordInput) {
+    if (password == passwordInput) {
       return User()
+        ..loginId = loginIdInput
         ..email = email
         ..firstname = firstName
         ..lastname = lastName

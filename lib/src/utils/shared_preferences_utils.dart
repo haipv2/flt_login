@@ -14,7 +14,7 @@ class SharedPreferencesUtils {
   static Future<User> getUserFromPreferences() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String jsonStr = prefs.getString(USER_PREFS_KEY);
-    var result = User.fromJson(jsonDecode(jsonStr));
+    User result = User.fromJson(jsonDecode(jsonStr));
     return result;
   }
 

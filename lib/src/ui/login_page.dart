@@ -13,7 +13,7 @@ class Loginpage extends StatefulWidget {
 }
 
 class _LoginpageState extends State<Loginpage> {
-  TextEditingController emailController = new TextEditingController();
+  TextEditingController loginIdTextController = new TextEditingController();
   TextEditingController passController = new TextEditingController();
 
   LoginBloc _bloc;
@@ -45,17 +45,17 @@ class _LoginpageState extends State<Loginpage> {
     );
     var textLogin = Text('Login Page');
     var emailTextField = StreamBuilder(
-      stream: _bloc.emailStream,
+      stream: _bloc.loginIdStream,
       builder: (context, snapshot) {
         return Padding(
           padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
           child: TextField(
             autofocus: false,
-            controller: emailController,
-            onChanged: _bloc.emailStreamChange,
+            controller: loginIdTextController,
+            onChanged: _bloc.loginIdStreamChange,
             decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+                labelText: 'Login ID',
+                prefixIcon: Icon(Icons.account_circle),
                 errorText: snapshot.error,
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(5)),
@@ -173,10 +173,10 @@ class _LoginpageState extends State<Loginpage> {
   }
 
   void _authenticate(context) {
-    if (emailController.value.text.isEmpty &&
+    if (loginIdTextController.value.text.isEmpty &&
         passController.value.text.isEmpty) {
       SnackBar snackbar = SnackBar(
-        content: Text('Enter correctly email and password'),
+        content: Text('Enter correctly loginId and password'),
         duration: Duration(seconds: 3),
       );
       Scaffold.of(context).showSnackBar(snackbar);
@@ -185,7 +185,7 @@ class _LoginpageState extends State<Loginpage> {
     _bloc.authenticateUser().then((user) {
       if (user == null) {
         SnackBar snackbar = SnackBar(
-          content: Text('Email or password is not corrected'),
+          content: Text('LoginId or password is not corrected'),
           duration: Duration(seconds: 3),
         );
         Scaffold.of(context).showSnackBar(snackbar);

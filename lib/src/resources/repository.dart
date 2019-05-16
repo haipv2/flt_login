@@ -11,8 +11,8 @@ class Repository {
     return result;
   }
 
-  Future<User> authenticateUser(String email, String password) async {
-    var result = _firestoreProvider.authenticateUser(email, password);
+  Future<User> authenticateUser(String loginId, String password) async {
+    var result = _firestoreProvider.authenticateUser(loginId, password);
     return result;
   }
 
@@ -23,7 +23,6 @@ class Repository {
 
   Future<List<String>> getListPushIdViaEmail(String email) async{
     var result =await _firestoreProvider.getListPushIdViaEmail(email);
-    print('');
     return result;
   }
 }

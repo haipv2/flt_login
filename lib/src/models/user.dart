@@ -1,3 +1,12 @@
+const USER_EMAIL='email';
+const USER_FIRST_NAME='firstName';
+const USER_LAST_NAME='lastName';
+const USER_LOGIN_ID='loginId';
+const USER_PASSWORD='password';
+const USER_GENDER='gender';
+const USER_ROLE='role';
+
+
 class User {
   String _firstname;
   String _lastname;
@@ -5,27 +14,33 @@ class User {
   String _password;
   String _role;
   int _gender;
-  String userId, name, photoUrl, pushId;
+  String _loginId;
 
   int get gender => _gender;
 
   User();
-  User.userForPush(this.userId,this.name,this.photoUrl,this.pushId);
 
   User.fromJson(Map<String, dynamic> json) {
-    firstname = json['first_name'];
-    email = json['email'];
-    lastname = json['last_name'];
-    gender = json['gender'];
-//    email=json['email'];
+    loginId = json[USER_LOGIN_ID];
+    firstname = json[USER_FIRST_NAME];
+    email = json[USER_EMAIL];
+    lastname = json[USER_LAST_NAME];
+    gender = json[USER_GENDER];
   }
 
   Map<String, dynamic> toJson() => {
-        'email': email,
-        'first_name': firstname,
-        'last_name': lastname,
-        'gender': gender,
+        USER_LOGIN_ID: loginId,
+        USER_EMAIL: email,
+        USER_FIRST_NAME: firstname,
+        USER_LAST_NAME: lastname,
+        USER_GENDER: gender,
       };
+
+  String get loginId => _loginId;
+
+  set loginId(String value) {
+    _loginId = value;
+  }
 
   set gender(int value) {
     _gender = value;
