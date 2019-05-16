@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/models/user_push.dart';
@@ -37,48 +35,37 @@ class FirestoreProvider {
   }
 
   Future<void> registerUserPushInfo(UserPushInfo userPushInfo) async {
-    String userInfoStr = json.encode(userPushInfo.toJson());
     var result = await FirebaseDatabase.instance
         .reference()
         .child(USER_PUSH_INFO)
-        .push()
-        .set({
-      USER_PUSH_LOGIN_ID: userPushInfo.loginId,
-      USER_PUSH_PUSH_ID: userPushInfo.pushIds
-    });
+        .child(userPushInfo.loginId)
+        .set({USER_PUSH_PUSH_ID: userPushInfo.pushIds});
     return result;
   }
 
-  Future<List<String>> getListPushIdViaEmail(String friendsEmail) async {
+  Future<List<dynamic>> getListPushIdViaLoginId(String friendsLoginId) async {
     DataSnapshot snapshot =
         await _firebaseDatabase.reference().child(USER_PUSH_INFO).once();
     Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
-    List<String> result = [];
+    List<dynamic> result = [];
     users.forEach((key, userMap) {
 //      print('KEY:======================= $key');
-      var pushId = getPushId(friendsEmail, userMap);
-      if (pushId != null) result.add(pushId);
+    if (key != friendsLoginId) return;
+      List<dynamic> pushId = getPushId(friendsLoginId, userMap);
+      result.addAll(pushId);
     });
 //    print(querySnapshot.documents);
     return result;
   }
 
-  String getPushId(String friendsEmail, Map<dynamic, dynamic> userMap) {
-    String pushId;
-    String email;
+  List<dynamic> getPushId(String friendsLoginId, Map<dynamic, dynamic> userMap) {
+    List<dynamic> pushId;
     userMap.forEach((key, value) {
-      if (key == 'push_id') {
-        pushId = value.toString();
-      }
-      if (key == USER_EMAIL) {
-        email = value.toString();
+      if (key == USER_PUSH_PUSH_ID) {
+        pushId = value;
       }
     });
-    if (email == friendsEmail) {
-      return pushId;
-    } else {
-      return null;
-    }
+    return pushId;
   }
 
   User getUserByLoginAndPassword(String loginIdInput, String passwordInput,

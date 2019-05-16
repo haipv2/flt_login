@@ -153,7 +153,7 @@ class SignupBloc extends Object {
 
     var pushId = await firebaseMessaging.getToken();
 
-    UserPushInfo userPushInfo = UserPushInfo(user.email, [pushId]);
+    UserPushInfo userPushInfo = UserPushInfo(user.loginId, [pushId]);
     await _repository.registerUserPushInfo(userPushInfo);
     SharedPreferencesUtils.saveUserToPreferences(user);
     SharedPreferencesUtils.setStringToPreferens(PUSH_ID, pushId);

@@ -21,8 +21,8 @@ class Repository {
     return result;
   }
 
-  Future<List<String>> getListPushIdViaEmail(String email) async{
-    var result =await _firestoreProvider.getListPushIdViaEmail(email);
+  Future<List<dynamic>> getListPushIdViaLoginId(String loginId) async{
+    var result =await _firestoreProvider.getListPushIdViaLoginId(loginId);
     return result;
   }
 }

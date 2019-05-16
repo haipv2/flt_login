@@ -22,8 +22,7 @@ import '../common/game_enums.dart';
 class MyPage extends StatefulWidget {
   final User user;
 
-  MyPage(this.user){
-  }
+  MyPage(this.user) {}
 
   @override
   _MyPageState createState() => _MyPageState();
@@ -141,22 +140,24 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   void accept(Map<String, dynamic> message) async {
     String fromPushId = getValueFromMap(message, 'fromPushId');
     String fromId = getValueFromMap(message, 'fromId');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var username = prefs.getString(USER_NAME);
-    var pushId = prefs.getString(PUSH_ID);
-    var userId = prefs.getString(USER_ID);
+    User user =await SharedPreferencesUtils.getUserFromPreferences();
+//    SharedPreferences prefs = await SharedPreferences.getInstance();
+//    var username = prefs.getString(USER_NAME);
+    var pushId = SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
+//    var userId = prefs.getString(USER_ID);
+    print(user);
 
     var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
     String dataURL =
-        '$base/sendNotification2?to=$fromPushId&fromPushId=$pushId&fromId=$userId&fromName=$username&type=accept';
+        '$base/sendNotification2?to=$fromPushId&fromPushId=$pushId&fromId=${user.loginId}&fromName=${user.firstname}&type=accept';
     print(dataURL);
     http.Response response = await http.get(dataURL);
-    String gameId = '$fromId-$userId';
+    String gameId = '$fromId-${user.loginId}';
     Navigator.of(context).push(new MaterialPageRoute(
         builder: (context) => new Game(
               GameMode.friends,
-              null,
-              null,
+              user,
+              new User()..firstname='test'..lastname='abc'..loginId='test3',
             )));
   }
 
@@ -319,7 +320,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 onTap: () {
                   Navigator.of(context)
                       .pushReplacement(MaterialPageRoute(builder: (context) {
-                        removeUserInfo();
+                    removeUserInfo();
                     return Loginpage();
                   }));
                 },
@@ -330,15 +331,12 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   }
 
   void openFriendList() async {
-//    FirebaseUser user = await signInWithGoogle();
-//    await saveUserToFirebase(user);
-////    Navigator.of(context).pushNamed('userList');
 //    Navigator.of(context).pushReplacement(MaterialPageRoute(
 //        builder: (context) => UserList(
+//              widget.user,
 //              title: 'Friend list',
 //            )));
   Navigator.pushNamed(context, FRIENDS_LIST);
-
   }
 
   Future<FirebaseUser> signInWithGoogle() async {
@@ -369,6 +367,5 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   void removeUserInfo() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove(USER_PREFS_KEY);
-
   }
 }
