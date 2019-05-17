@@ -14,7 +14,7 @@ const DIAGONAL_DESCENDING = 3;
 
 const PLAYER_WINNER = 10;
 const AI_WINNER = 11;
-const DRAFT = 12;
+const DRAFT = 5;
 
 const NAME = 'name';
 const PHOTO_URL = 'photoUrl';
@@ -36,8 +36,8 @@ const USER_INFO = '/user_info';
 const FRIENDS_LIST = '/friends_list';
 
 const GAME_TBL = 'games_tbl';
-const COLUMNS = 12;
-const ROWS = 13;
+const COLUMNS = 10;
+const ROWS = 15;
 const SUM = COLUMNS * ROWS;
 const WIN_POINT = 5;
 const SURRENDER_FLAG = 'assets/images/surrender.gif';

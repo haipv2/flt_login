@@ -34,7 +34,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   AnimationController _controller;
   Animation _firstAnimationMenu;
-  AnimationController _controllerHide;
   Animation _lateAnimationMenu;
   AnimataionCommonStatus animataionCommonStatus;
 
@@ -48,8 +47,6 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 2));
-    _controllerHide =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
 
     _firstAnimationMenu = Tween(begin: -1.0, end: 0).animate(

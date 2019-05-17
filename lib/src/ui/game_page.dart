@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,12 +81,16 @@ class _GameState extends State<Game> {
         alignment: AlignmentDirectional.bottomEnd,
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
+//          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
-              height: 20.0,
+//            Container(
+//              child: SizedBox(
+//                height: 20.0,
+//              ),
+//            ),
+            Container(
+              child: playerInfo(),
             ),
-            playerInfo(),
             Expanded(
               child: new GridView.builder(
                   gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
@@ -111,51 +116,51 @@ class _GameState extends State<Game> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-//        color: Colors.orange,
-        child: BottomNavigationBar(
-            backgroundColor: Colors.deepOrangeAccent,
-            items: [
-              BottomNavigationBarItem(
-                icon: ReactiveButton(
-                  child: Container(
-//                    decoration: BoxDecoration(
-//                        border: Border.all(color: Colors.black, width: 1.0)),
-                    color: Colors.white,
-                    width: 80.0,
-                    height: 40.0,
-                    child: Center(
-                      child: Image.asset('assets/images/emotion.png'),
-                    ),
-                  ),
-                  containerAbove: false,
-                  iconWidth: 32.0,
-                  iconGrowRatio: 1.5,
-                  roundIcons: false,
-                  icons: _icons,
-                  onTap: () => print('on tap'),
-                  onSelected: (ReactiveIconDefinition button) {
-                    setState(() {
-                      _icon = button.code;
-                    });
-                  },
-                ),
-                title: Text(''),
-              ),
-              BottomNavigationBarItem(
-                icon: GestureDetector(
-                  onTap: _backToMain,
-                  child: Image.asset(
-                    SURRENDER_FLAG,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                title: Text('surrender'),
-              )
-            ]),
-      ),
+//      bottomNavigationBar: Container(
+////        color: Colors.orange,
+//        child: BottomNavigationBar(
+//            backgroundColor: Colors.deepOrangeAccent,
+//            items: [
+//              BottomNavigationBarItem(
+//                icon: ReactiveButton(
+//                  child: Container(
+////                    decoration: BoxDecoration(
+////                        border: Border.all(color: Colors.black, width: 1.0)),
+//                    color: Colors.white,
+//                    width: 60.0,
+//                    height: 40.0,
+//                    child: Center(
+//                      child: Image.asset('assets/images/emotion.png'),
+//                    ),
+//                  ),
+//                  containerAbove: false,
+//                  iconWidth: 32.0,
+//                  iconGrowRatio: 1.5,
+//                  roundIcons: false,
+//                  icons: _icons,
+//                  onTap: () => print('on tap'),
+//                  onSelected: (ReactiveIconDefinition button) {
+//                    setState(() {
+//                      _icon = button.code;
+//                    });
+//                  },
+//                ),
+//                title: Text(''),
+//              ),
+//              BottomNavigationBarItem(
+//                icon: GestureDetector(
+//                  onTap: _backToMain,
+//                  child: Image.asset(
+//                    SURRENDER_FLAG,
+//                    width: 50,
+//                    height: 50,
+//                    fit: BoxFit.cover,
+//                  ),
+//                ),
+//                title: Text('surrender'),
+//              )
+//            ]),
+//      ),
     );
   }
 
@@ -349,11 +354,18 @@ class _GameState extends State<Game> {
   }
 
   Column _buildPlayer(User player) {
+    String _imagePath = player.gender == 0
+        ? 'assets/images/female.png'
+        : 'assets/images/male.png';
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(Icons.ac_unit),
+        Image(
+          image: AssetImage(_imagePath),
+          width: 30,
+          height: 30,
+        ),
         Container(
           margin: const EdgeInsets.only(top: 1),
           child: Text(player.firstname),
