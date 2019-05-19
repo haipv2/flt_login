@@ -8,7 +8,7 @@ class GameItem extends StatelessWidget{
   Widget image;
   var activePlayer;
   GameItem(
-      {this.id, this.text = "", this.bg = Colors.grey, this.enabled = true, this.image, this.activePlayer});
+      {this.id, this.text = "", this.bg = Colors.orange, this.enabled = true, this.image, this.activePlayer});
 
   @override
   Widget build(BuildContext context) {

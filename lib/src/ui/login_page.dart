@@ -90,9 +90,9 @@ class _LoginpageState extends State<Loginpage> {
     Widget loginButton(context) => StreamBuilder(
           stream: _bloc.loginStream,
           builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-            if (!snapshot.hasData || snapshot.hasError) {
+            if (snapshot == null || !snapshot.hasData || snapshot.hasError) {
               return _processLogin(context);
-            } else if (snapshot.data) {
+            } else {
               return CircularProgressIndicator();
             }
           },
@@ -192,9 +192,8 @@ class _LoginpageState extends State<Loginpage> {
       } else {
         _bloc.doLoginStream(true);
         SharedPreferencesUtils.saveUserToPreferences(user);
-
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MyPage(user)));
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => MyPage(user)));
       }
     }).catchError((error) {
       SnackBar snackbar = SnackBar(

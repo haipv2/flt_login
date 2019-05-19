@@ -1,7 +1,6 @@
 import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/models/user_push.dart';
 import 'package:flt_login/src/resources/firestore_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Repository {
   final _firestoreProvider = FirestoreProvider();
@@ -24,5 +23,12 @@ class Repository {
   Future<List<dynamic>> getListPushIdViaLoginId(String loginId) async{
     var result =await _firestoreProvider.getListPushIdViaLoginId(loginId);
     return result;
+  }
+
+  User getUserViaLoginId(String loginId) {
+    var result = _firestoreProvider.getUserByLogin(loginId);
+     print('object $result');
+
+    return result as User ;
   }
 }

@@ -102,13 +102,15 @@ class _UserListState extends State<UserList> {
         await _userPushBloc.getListPushIdViaLoginId(user.loginId);
 
     var username = user.firstname;
-    var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
+    var friendsLoginId = user.firstname;
+    var base = 'https://us-central1-caro-53f7d.cloudfunctions.net';
+    var player1Items = widget.currentUser.loginId;
 
     pushIds.forEach((item) {
       String dataURL =
-          '$base/sendNotification2?to=${item.toString()}&fromPushId=$pushIdFrom&fromId=${widget.currentUser.email}&fromName=${widget.currentUser.firstname}&type=invite';
+          '$base/sendNotification2?to=${item.toString()}&fromPushId=$pushIdFrom&fromId=${player1Items}&fromName=${widget.currentUser.firstname}&type=invite';
       print(dataURL);
-      String gameId = '${widget.currentUser.firstname}-${username}';
+      String gameId = '${player1Items}-${friendsLoginId}';
       FirebaseDatabase.instance
           .reference()
           .child(GAME_TBL)

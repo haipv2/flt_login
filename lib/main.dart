@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:english_words/english_words.dart';
 import 'package:flt_login/src/blocs/login_bloc_provider.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
@@ -20,45 +20,37 @@ void main() {
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final SharedPreferences preferences;
   User user;
 
   MyApp(this.preferences);
 
   @override
-  Widget build(BuildContext context) {
-    String userJson = preferences.getString(USER_PREFS_KEY);
+  _MyAppState createState() => _MyAppState();
+}
 
+class _MyAppState extends State<MyApp> {
+
+  @override
+  Widget build(BuildContext context) {
+    String userJson = widget.preferences.getString(USER_PREFS_KEY);
+    final aiName = WordPair.random();
     if (userJson != null && userJson.isNotEmpty) {
       Map userMap = jsonDecode(userJson);
-      user = User.fromJson(userMap);
+      widget.user = User.fromJson(userMap);
     }
 
     return LoginBlocProvider(
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Demo app',
-        home: Scaffold(body: user == null ? Loginpage() : MyPage(user)),
+        home: Scaffold(body: widget.user == null ? Loginpage() : MyPage(widget.user)),
         routes: <String, WidgetBuilder>{
-          MYPAGE: (BuildContext context) => MyPage(user),
-          USER_INFO: (BuildContext context) => UserInfo(user),
-          FRIENDS_LIST: (BuildContext context) => UserList(
-                user,
-                title: 'List your friends',
-              ),
-          ARENA: (BuildContext context) {
-            return Game(
-              GameMode.single,
-              user,
-              User()
-                ..firstname = 'AI'
-                ..loginId = 'AI id'
-                ..email = 'abcd@gmail.com',
-            );
-          }
+          MYPAGE: (BuildContext context) => MyPage(widget.user),
         },
       ),
     );
   }
 }
+

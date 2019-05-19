@@ -1,11 +1,12 @@
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flt_login/src/blocs/game_bloc.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
+import 'package:flt_login/src/utils/shared_preferences_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_button/flutter_reactive_button.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/game_enums.dart';
 import 'cell.dart';
@@ -18,11 +19,28 @@ class Game extends StatefulWidget {
   GameMode gameMode;
 
   User player2;
+  String player1LoginId;
+  String player2LoginId;
 
   Game(this.gameMode, this.player1, this.player2);
 
+  Game.fromLoginId(GameMode gameMode, User player1, String player2LoginId) {
+    this.player1 = player1;
+    getUserFromPrefs(player2);
+    print(player2);
+  }
+
   @override
   _GameState createState() => _GameState();
+
+  Future<User> getUserFromPrefs(User player2) async {
+    var userFromPreferences =
+        SharedPreferencesUtils.getUserFromPreferences().then((onValue) {
+      player2 = onValue;
+    });
+    print(player2);
+    return player2;
+  }
 }
 
 class _GameState extends State<Game> {
@@ -30,6 +48,8 @@ class _GameState extends State<Game> {
   List<int> player1List;
   List<int> player2List;
   var activePlayer;
+  int player1Score = 0;
+  int player2Score = 0;
 
   List<ReactiveIconDefinition> _icons = <ReactiveIconDefinition>[
     ReactiveIconDefinition(
@@ -37,12 +57,14 @@ class _GameState extends State<Game> {
       code: 'mess',
     ),
   ];
+  GameBloc bloc;
 
   @override
   void initState() {
-    super.initState();
+    bloc = new GameBloc();
     itemlist = doInit();
     doFristTurn();
+    super.initState();
   }
 
   List<GameItem> doInit() {
@@ -87,15 +109,17 @@ class _GameState extends State<Game> {
             ),
             playerInfo(),
             Expanded(
+              flex: 5,
               child: new GridView.builder(
+                  padding: EdgeInsets.only(top: 5.0),
                   gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: COLUMNS,
                       crossAxisSpacing: 0.5,
                       mainAxisSpacing: 0.5),
                   itemCount: itemlist.length,
                   itemBuilder: (context, i) => new SizedBox(
-                        width: 20.0,
-                        height: 20.0,
+//                        width: 30.0,
+//                        height: 20.0,
                         child: new RaisedButton(
                           padding: const EdgeInsets.all(1.0),
                           onPressed: itemlist[i].enabled
@@ -108,53 +132,10 @@ class _GameState extends State<Game> {
                         ),
                       )),
             ),
+            scoreSection(),
+            surrenderSection(),
           ],
         ),
-      ),
-      bottomNavigationBar: Container(
-//        color: Colors.orange,
-        child: BottomNavigationBar(
-            backgroundColor: Colors.deepOrangeAccent,
-            items: [
-              BottomNavigationBarItem(
-                icon: ReactiveButton(
-                  child: Container(
-//                    decoration: BoxDecoration(
-//                        border: Border.all(color: Colors.black, width: 1.0)),
-                    color: Colors.white,
-                    width: 80.0,
-                    height: 40.0,
-                    child: Center(
-                      child: Image.asset('assets/images/emotion.png'),
-                    ),
-                  ),
-                  containerAbove: false,
-                  iconWidth: 32.0,
-                  iconGrowRatio: 1.5,
-                  roundIcons: false,
-                  icons: _icons,
-                  onTap: () => print('on tap'),
-                  onSelected: (ReactiveIconDefinition button) {
-                    setState(() {
-                      _icon = button.code;
-                    });
-                  },
-                ),
-                title: Text(''),
-              ),
-              BottomNavigationBarItem(
-                icon: GestureDetector(
-                  onTap: _backToMain,
-                  child: Image.asset(
-                    SURRENDER_FLAG,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                title: Text('surrender'),
-              )
-            ]),
       ),
     );
   }
@@ -202,7 +183,7 @@ class _GameState extends State<Game> {
           showDialog(
               context: context,
               builder: (_) =>
-                  new GameDialog('Game title', 'Reset game', resetGame));
+                  new GameDialog('Finish', 'Next round ?', resetGame));
         }
       } else {
         activePlayer == 2 ? autoPlay(cellNumber) : null;
@@ -224,11 +205,17 @@ class _GameState extends State<Game> {
 
     if (winner != null) {
       if (winner == 1) {
+        setState(() {
+          player1Score += 1;
+        });
         showDialog(
             context: context,
             builder: (_) => new GameDialog("Player 1 Won",
                 "Press the reset button to start again.", resetGame));
       } else {
+        setState(() {
+          player2Score += 1;
+        });
         showDialog(
             context: context,
             builder: (_) => new GameDialog("Player 2 Won",
@@ -349,14 +336,25 @@ class _GameState extends State<Game> {
   }
 
   Column _buildPlayer(User player) {
+    String imagePath = player.gender == 0
+        ? 'assets/images/female.png'
+        : 'assets/images/male.png';
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(Icons.ac_unit),
+        CircleAvatar(
+          backgroundImage: AssetImage(imagePath),
+          backgroundColor: Colors.white,
+        ),
         Container(
           margin: const EdgeInsets.only(top: 1),
-          child: Text(player.firstname),
+          child: Text(
+            player.firstname,
+            style: TextStyle(
+              fontFamily: 'indie flower',
+            ),
+          ),
         )
       ],
     );
@@ -365,7 +363,10 @@ class _GameState extends State<Game> {
   Text _buildText(String s) {
     return Text(s,
         style: TextStyle(
-            color: Colors.red, fontSize: 30.0, fontWeight: FontWeight.w600));
+            color: Colors.red,
+            fontSize: 30.0,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'indie flower'));
   }
 
   void _backToMain() {
@@ -394,12 +395,104 @@ class _GameState extends State<Game> {
   }
 
   void doFristTurn() {
-    int firstCell = (COLUMNS * ROWS) ~/ 2 - 1;
+    int firstCell = ((COLUMNS * (ROWS ~/ 2 - 1)) + (COLUMNS ~/ 2));
     var gameItem = GameItem(
       id: firstCell,
       image: Image.asset('assets/images/p$activePlayer.png'),
       enabled: false,
     );
     playGame(itemlist[firstCell], firstCell);
+  }
+
+  Widget surrenderSection() => Expanded(
+        flex: 1,
+        child: GestureDetector(
+          onTap: _backToMain,
+          child: Container(
+            alignment: AlignmentDirectional.center,
+            decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                border:
+                    Border(top: BorderSide(width: 1.0, color: Colors.grey))),
+            child: Image.asset(
+              SURRENDER_FLAG,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+
+  Widget scoreSection() {
+    return Expanded(
+      flex: 1,
+      child: Row(
+//        textDirection: TextDirection.ltr,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Expanded(
+              flex: 6,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                verticalDirection: VerticalDirection.down,
+                children: <Widget>[
+                  Text(
+                    '${widget.player1.firstname}',
+                    style: TextStyle(
+                      fontFamily: 'indie flower',
+                      fontSize: 25,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 15),
+                    child: Text('${player1Score}',
+                        style: TextStyle(
+                          fontSize: 25,
+                        )),
+                  )
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                        child: Center(
+                            child: Text(
+                      ':',
+                      style: TextStyle(fontSize: 40),
+                    ))),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 6,
+              child: Row(
+                verticalDirection: VerticalDirection.down,
+                children: <Widget>[
+                  Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 15),
+                        child: Text(
+                          '${player2Score}',
+                          style: TextStyle(fontSize: 25),
+                          textAlign: TextAlign.left,
+                        ),
+                      )),
+                  Text('${widget.player2.firstname}',
+                      style: TextStyle(
+                        fontFamily: 'indie flower',
+                        fontSize: 25,
+                      )),
+                ],
+              ),
+            )
+          ]),
+    );
   }
 }

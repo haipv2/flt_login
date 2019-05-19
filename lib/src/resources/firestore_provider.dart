@@ -49,16 +49,15 @@ class FirestoreProvider {
     Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
     List<dynamic> result = [];
     users.forEach((key, userMap) {
-//      print('KEY:======================= $key');
-    if (key != friendsLoginId) return;
+      if (key != friendsLoginId) return;
       List<dynamic> pushId = getPushId(friendsLoginId, userMap);
       result.addAll(pushId);
     });
-//    print(querySnapshot.documents);
     return result;
   }
 
-  List<dynamic> getPushId(String friendsLoginId, Map<dynamic, dynamic> userMap) {
+  List<dynamic> getPushId(
+      String friendsLoginId, Map<dynamic, dynamic> userMap) {
     List<dynamic> pushId;
     userMap.forEach((key, value) {
       if (key == USER_PUSH_PUSH_ID) {
@@ -96,5 +95,50 @@ class FirestoreProvider {
         ..gender = gender;
     }
     return null;
+  }
+
+  Future<User> getUserByLogin(loginIdInput)async {
+    DataSnapshot snapshot = await
+        _firebaseDatabase.reference().child(USERS_TBL).once();
+    print('object');
+
+    Map<String, dynamic> users = snapshot.value.cast<String, dynamic>();
+    User result;
+    String email, password, firstName, lastName;
+    int gender;
+    users.forEach((key, value) {
+      if (key == loginIdInput) {
+        result = getUserInMapByLogin(value);
+        result.loginId = loginIdInput;
+      }
+    });
+
+    return result;
+  }
+
+  User getUserInMapByLogin(Map<dynamic, dynamic> userMap) {
+    String email, password, firstName, lastName;
+    int gender;
+    userMap.forEach((key, value) {
+      if (key == USER_EMAIL) {
+        email = value.toString();
+      } else if (key == USER_PASSWORD) {
+        password = value.toString();
+      } else if (key == USER_FIRST_NAME) {
+        firstName = value.toString();
+      } else if (key == USER_LAST_NAME) {
+        lastName = value.toString();
+      } else if (key == USER_GENDER) {
+        gender = int.parse(value);
+      }
+    });
+    var result = User()
+      ..email = email
+      ..firstname = firstName
+      ..lastname = lastName
+      ..email = email
+      ..password = password
+      ..gender = gender;
+    return result;
   }
 }

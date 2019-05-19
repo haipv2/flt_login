@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:english_words/english_words.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flt_login/src/blocs/mypage_bloc.dart';
 import 'package:flt_login/src/common/common.dart';
 import 'package:flt_login/src/models/user.dart';
 import 'package:flt_login/src/ui/game_page.dart';
@@ -18,6 +20,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../common/game_enums.dart';
+import 'user_info_page.dart' as userInfo;
 
 class MyPage extends StatefulWidget {
   final User user;
@@ -37,6 +40,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   AnimationController _controllerHide;
   Animation _lateAnimationMenu;
   AnimataionCommonStatus animataionCommonStatus;
+  MyPageBloc bloc;
 
   @override
   void dispose() {
@@ -46,6 +50,7 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    bloc = new MyPageBloc();
     super.initState();
     _controller =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
@@ -94,13 +99,13 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
     if (type == 'invite') {
       showInvitePopup(context, message);
     } else if (type == 'accept') {
-      var currentUser = await _auth.currentUser();
+      var currentUser = widget.user;
 
-      String gameId = '${currentUser.uid}-$fromId';
+      String gameId = '${currentUser.loginId}-$fromId';
       Navigator.of(context).push(new MaterialPageRoute(
-          builder: (context) => new Game(
+          builder: (context) => new Game.fromLoginId(
                 GameMode.friends,
-                null,
+                currentUser,
                 null,
               )));
     } else if (type == 'reject') {}
@@ -125,7 +130,9 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
       actions: <Widget>[
         FlatButton(
           child: Text('Decline'),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         FlatButton(
           child: Text('Accept'),
@@ -138,26 +145,28 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   }
 
   void accept(Map<String, dynamic> message) async {
-    String fromPushId = getValueFromMap(message, 'fromPushId');
-    String fromId = getValueFromMap(message, 'fromId');
-    User user =await SharedPreferencesUtils.getUserFromPreferences();
+    String fromPushId = getValueFromMapData(message, 'fromPushId');
+    String fromId = getValueFromMapData(message, 'fromId');
+    User user = await SharedPreferencesUtils.getUserFromPreferences();
 //    SharedPreferences prefs = await SharedPreferences.getInstance();
 //    var username = prefs.getString(USER_NAME);
     var pushId = SharedPreferencesUtils.getStringToPreferens(PUSH_ID);
 //    var userId = prefs.getString(USER_ID);
     print(user);
 
-    var base = 'https://us-central1-testproject-fbdaf.cloudfunctions.net';
+    var base = 'https://us-central1-caro-53f7d.cloudfunctions.net';
     String dataURL =
         '$base/sendNotification2?to=$fromPushId&fromPushId=$pushId&fromId=${user.loginId}&fromName=${user.firstname}&type=accept';
     print(dataURL);
     http.Response response = await http.get(dataURL);
     String gameId = '$fromId-${user.loginId}';
+    User user2;
+    bloc.getUserViaLoginId(fromId, user2);
     Navigator.of(context).push(new MaterialPageRoute(
         builder: (context) => new Game(
               GameMode.friends,
               user,
-              new User()..firstname='test'..lastname='abc'..loginId='test3',
+              user2,
             )));
   }
 
@@ -184,6 +193,9 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     _controller.forward().orCancel;
+    var aiName2 = '${WordPair.random()} ${WordPair.random()}';
+    var aiName1 = '${WordPair.random()}';
+    var aiName = aiName2.length > 11 ? aiName1 : aiName2;
     Widget singleMode() => Transform(
           transform: Matrix4.translationValues(
               _firstAnimationMenu.value * width, 0, 0),
@@ -197,8 +209,18 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 ),
                 onPressed: () {
                   print('print single mode');
-//                  _hideMenuAnimate();
-                  Navigator.pushNamed(context, ARENA);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => Game(
+                            GameMode.single,
+                            widget.user,
+                            User()
+                              ..firstname = '$aiName'
+                              ..loginId = '${aiName}Id'
+                              ..email = '${aiName}@gmail.com',
+                          ),
+                    ),
+                  );
                 },
                 padding: EdgeInsets.all(12),
                 color: Colors.lightBlueAccent,
@@ -243,7 +265,28 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
               ),
               onPressed: () {
                 print('Quit');
-                exit(0);
+                showDialog(
+                    context: context,
+                    builder: (_) {
+                      return AlertDialog(
+                        title: Text('Quit Game'),
+                        content: Text('Do you want to quit the game ?'),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: new Text('Cancel'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                          FlatButton(
+                            child: new Text('Yes'),
+                            onPressed: () {
+                              exit(0);
+                            },
+                          )
+                        ],
+                      );
+                    });
               },
               padding: EdgeInsets.all(12),
               color: Colors.lightBlueAccent,
@@ -311,7 +354,10 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
                 leading: const Icon(Icons.account_circle),
                 title: Text('User\'s info'),
                 onTap: () {
-                  Navigator.pushNamed(context, USER_INFO);
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) {
+                    return userInfo.UserInfo(widget.user);
+                  }));
                 },
               ),
               ListTile(
@@ -331,12 +377,12 @@ class _MyPageState extends State<MyPage> with TickerProviderStateMixin {
   }
 
   void openFriendList() async {
-//    Navigator.of(context).pushReplacement(MaterialPageRoute(
-//        builder: (context) => UserList(
-//              widget.user,
-//              title: 'Friend list',
-//            )));
-  Navigator.pushNamed(context, FRIENDS_LIST);
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => UserList(
+              widget.user,
+              title: 'Friend list',
+            )));
+//    Navigator.pushNamed(context, FRIENDS_LIST);
   }
 
   Future<FirebaseUser> signInWithGoogle() async {
